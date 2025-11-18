@@ -31,14 +31,14 @@ class TrackingNode(Node):
         self.get_logger().info("YOLO + DeepSORT tracking node started.")
 
         # Caricamento YOLO
-        self.model = YOLO("yolo11m.pt")
+        self.model = YOLO("yolo11s.pt")
 
         # DeepSORT setup
         self.tracker = DeepSort(
             max_iou_distance=0.9,
             max_age=120,
             n_init=3,
-            max_cosine_distance=0.4,
+            max_cosine_distance=0.6,
             nn_budget=30
         )
 
@@ -74,11 +74,11 @@ class TrackingNode(Node):
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
             p = PersonTracker()
-            p.id = track_id
-            p.x_center = int((x1 + x2) / 2)
-            p.y_center = int((y1 + y2) / 2)
-            p.w = x2 - x1
-            p.h = y2 - y1
+            p.id = int(track_id)
+            p.x_center = float((x1 + x2) / 2)
+            p.y_center = float((y1 + y2) / 2)
+            p.w = float(x2 - x1)
+            p.h = float(y2 - y1)
             array_msg.people.append(p)
 
         # Pubblica i risultati

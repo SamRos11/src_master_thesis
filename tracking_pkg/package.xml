@@ -4,7 +4,7 @@
   <name>tracking_pkg</name>
   <version>0.0.1</version>
   <description>Tracking node for depth camera object tracking</description>
-  <maintainer email="samu@todo.todo">samu</maintainer>
+  <maintainer email="samuelerosato2002@gmail.com">samu</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_python</buildtool_depend>

@@ -22,7 +22,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'tracking_node = tracking_pkg.tracking_node:main'
+            'tracking_node = tracking_pkg.tracking_node:main',
+            'video_publisher = tracking_pkg.video_publisher:main'
         ],
     },
 )
