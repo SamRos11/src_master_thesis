@@ -17,7 +17,7 @@ pip install ultralytics
 
 4) Install necessary librieries
 
-`python3 -m pip install --user "numpy<2" ultralytics deep_sort_realtime opencv-python-headless scipy`  
+```python3 -m pip install --user "numpy<2" ultralytics deep_sort_realtime opencv-python-headless scipy  ```
 pip install --upgrade pip setuptools wheel  
 pip install "numpy<2" scipy opencv-python-headless  
 pip install rclpy  
