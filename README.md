@@ -15,7 +15,7 @@ pip install catkin_pkg
 pip install lark-parser  
 pip install ultralytics  
 
-4) Install necessary librieries (outside the virtual ambient)
+3) Install necessary librieries (outside the virtual ambient)
 
 python3 -m pip install --user "numpy<2" ultralytics deep_sort_realtime opencv-python-headless scipy  
 pip install --upgrade pip setuptools wheel  
@@ -23,22 +23,9 @@ pip install "numpy<2" scipy opencv-python-headless
 pip install rclpy  
 sudo apt install -y ros-humble-cv-bridge  
 pip install ultralytics deep_sort_realtime  
-sudo apt update  
-sudo apt install python3-lxml
-sudo apt install ros-humble-gazebo-*  
-sudo apt install ros-humble-turtlebot3*  
-sudo apt install ros-humble-navigation2  
-sudo apt install ros-humble-nav2-bringup  
-echo 'export TURTLEBOT3_MODEL=waffle_pi' >> ~/.bashrc  
-source ~/.bashrc  
 
-if gazebo appear as a black windows or crash:  
-mkdir -p ~/.gazebo/models/
-git clone https://github.com/osrf/gazebo_models.git /tmp/gazebo_models
-mv /tmp/gazebo_models/* ~/.gazebo/models/
-rm -rf /tmp/gazebo_models
 
-6) Sorce and building
+4) Sorce and building
    
 source ~/ros2_env/bin/activate  
 cd ~/ros2_ws  
