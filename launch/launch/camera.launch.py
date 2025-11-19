@@ -1,4 +1,5 @@
 from launch import LaunchDescription
+from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir
@@ -20,6 +21,25 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(gazebo_launch_file)
     )
 
+    stella_vslam_node = Node(
+        package='stella_vslam_ros',
+        executable='run_slam',
+        name='stella_slam',
+        output='screen', 
+
+        
+        arguments=[
+            '-v', '/home/samu/dev_libs/stella_vslam_examples/build/orb_vocab.fbow', # Vocabolario
+            '-c', '/home/samu/ros2_ws/src/launch/launch/config.yaml', 
+            '--map-db-out', '/home/samu/ros2_ws/src/launch/launch/camera.launch.py/map.msg' 
+        ],
+
+        parameters=[
+            {'publish_tf': False},
+        ], 
+    )
+
     return LaunchDescription([
-        gazebo_launch
+        gazebo_launch,
+        stella_vslam_node
     ])

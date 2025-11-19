@@ -15,6 +15,7 @@
   <exec_depend>tracking_pkg</exec_depend>
   <exec_depend>gazebo_ros</exec_depend>
   <exec_depend>turtlebot3_gazebo</exec_depend>
+  <exec_depend>stella_vslam_ros</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
