@@ -62,11 +62,7 @@ gazebo
 sudo apt install ros-humble-turtlebot3  
 sudo apt install ros-humble-turtlebot3-simulations  
 sudo apt update
-sudo apt install python3-lxml
-install VcXsrv  
-nano ~/.bashrc  
-export DISPLAY="$(grep nameserver /etc/resolv.conf | awk '{print $2}'):0.0"  
-source ~/.bashrc  
+sudo apt install python3-lxml 
 export TURTLEBOT3_MODEL=burger  
 ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py  
  

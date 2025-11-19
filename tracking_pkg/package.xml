@@ -15,6 +15,7 @@
   <exec_depend>cv_bridge</exec_depend>
   <depend>std_msgs</depend>
   <depend>tracking_msgs</depend>
+  <exec_depend>ros2launch</exec_depend>
 
 
   <build_depend>rosidl_default_generators</build_depend>
