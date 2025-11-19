@@ -30,9 +30,11 @@ pip install ultralytics deep-sort-realtime
 sudo apt install python3-cv-bridge 
 pip install rclpy ament-package opencv-python  
 pip install Cython  
+pip install empy==3.3.4  
+pip install catkin_pkg  
+pip install lark  
 
-
-4) Sorce and building   
+4) Source and building:    
 
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc   
 echo "source ~/ros2_ws/install/setup.bash" >> ~/.bashrc  
@@ -41,6 +43,34 @@ cd ~/ros2_ws
 colcon build --symlink-install  
 source install/setup.bash  
 ros2 run tracking_pkg tracking_node
+
+5) stella_vslam installation: 
+
+mkdir ~/dev_libs  
+cd ~/dev_libs  
+git clone --recursive https://github.com/stella-cv/stella_vslam.git
+then follow the documentation
+
+6) Gazebo installation: 
+sudo apt update  
+sudo apt install gazebo  
+sudo apt install ros-humble-gazebo-ros-pkgs  
+gazebo  
+
+7) Turtlebot installation:  
+
+sudo apt install ros-humble-turtlebot3  
+sudo apt install ros-humble-turtlebot3-simulations  
+sudo apt update
+sudo apt install python3-lxml
+install VcXsrv  
+nano ~/.bashrc  
+export DISPLAY="$(grep nameserver /etc/resolv.conf | awk '{print $2}'):0.0"  
+source ~/.bashrc  
+export TURTLEBOT3_MODEL=burger  
+ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py  
+ 
+
 
 OTHERS:
 - command to export\import Linux  
