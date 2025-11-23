@@ -6,7 +6,7 @@
 
 Camera:
     name: "Turtlebot3_Simulated_RGBD"
-    setup: "RGBD"
+    setup: "monocular"
     model: perspective 
     
     fx: 530.4669406576809 
@@ -18,7 +18,7 @@ Camera:
     rows: 480
     
     fps: 30.0 
-    color_order: BGR 
+    color_order: RGB 
     
     distortion_model: radtan 
     k1: 0.0 
@@ -33,7 +33,7 @@ Camera:
 #================#
 
 Feature:
-    max_num_keypoints: 2000
+    max_num_keypoints: 3500
     scale_factor: 1.2
     num_levels: 8
     ini_fast_threshold: 20
