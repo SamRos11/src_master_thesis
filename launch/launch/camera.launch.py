@@ -6,9 +6,14 @@ from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir
 from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 from launch.substitutions import TextSubstitution
+from launch.actions import SetEnvironmentVariable
+from launch.actions import SetLaunchConfiguration
+from launch.substitutions import LaunchConfiguration, TextSubstitution
 import os
 
 def generate_launch_description():
+
+    use_sim_time = SetLaunchConfiguration(name='use_sim_time', value='True')
 
     turtlebot3_pkg_dir = get_package_share_directory('turtlebot3_gazebo')
     gazebo_ros_pkg_dir = get_package_share_directory('gazebo_ros')
@@ -26,6 +31,11 @@ def generate_launch_description():
         'model.sdf'
     )
 
+    set_depth_env = SetEnvironmentVariable(
+        name='TURTLEBOT3_GAZEBO_DEPTH',
+        value='true'
+    )
+
     gazebo_start = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(gazebo_ros_pkg_dir, 'launch', 'gazebo.launch.py')),
         launch_arguments={'world': world_path}.items(),
@@ -41,10 +51,24 @@ def generate_launch_description():
     spawn_texture_box = Node(
     package='gazebo_ros',
     executable='spawn_entity.py',
-    # Argomenti: -file per caricare il modello SDF
     arguments=['-entity', 'reference_cube', 
                '-file', texture_box_file], 
     output='screen',
+    )
+
+    depth_image_processor = Node(
+        package='depth_image_proc',
+        executable='depth_image_proc', # Il nodo principale di conversione
+        name='depth_image_proc_node',
+        output='screen',
+        
+        # Mappiamo i topic di input e output
+        remappings=[
+            ('camera/depth/image_raw', '/camera/depth/image_raw'), # Input: Topic RAW
+            ('camera/depth/camera_info', '/camera/camera_info'), # Input: Camera Info
+            # Output: Il nodo convertirà e pubblicherà il nuovo topic elaborato:
+            ('camera/depth/image_rect', '/depth/rect_color'), # Topic processato da usare in SLAM
+        ]
     )
 
     stella_vslam_node = Node(
@@ -62,19 +86,24 @@ def generate_launch_description():
         ],
 
         parameters=[
+            {'use_sim_time': True},
             {'publish_tf': False},
         ], 
 
         remappings=[
             ('/camera/color/image_raw', '/camera/image_raw'), 
-            ('/camera/depth/image_raw', '/camera/depth/image_raw'),
+            ('/camera/depth/image_raw', '/depth/rect_color'),
             ('/camera/camera_info', '/camera/camera_info'), 
         ],
     )
 
     return LaunchDescription([
+        use_sim_time,
+        set_depth_env,
         gazebo_start,
         spawn_turtlebot_entity,
         spawn_texture_box,
-        stella_vslam_node
+        stella_vslam_node,
+        depth_image_processor
     ])
+

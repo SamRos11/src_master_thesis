@@ -6,7 +6,7 @@
 
 Camera:
     name: "Turtlebot3_Simulated_RGBD"
-    setup: "monocular"
+    setup: "RGBD"
     model: perspective 
     
     fx: 530.4669406576809 
