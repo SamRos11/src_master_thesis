@@ -78,5 +78,7 @@ git add .
 git commit -m "Descrivi qui cosa hai modificato"
 git push
 
+ros2 topic pub /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0}, angular: {z: 0.2}}" -r 10
+
 
 

@@ -1,5 +1,3 @@
-# FILE: config.yaml - Versione Strutturalmente Corretta
-
 #==============#
 # Camera Model #
 #==============#
@@ -47,3 +45,9 @@ FramePublisher:
     use_pangolin: true 
     use_opencv_viewer: false
     use_disable_for_monocular: false
+
+Optimizer:
+    max_num_iterations: 100 
+    
+Initializer:
+    min_num_triangulated_pts: 20

@@ -56,19 +56,19 @@ def generate_launch_description():
     output='screen',
     )
 
-    depth_image_processor = Node(
+    depth_converter_node = Node(
         package='depth_image_proc',
-        executable='depth_image_proc', # Il nodo principale di conversione
-        name='depth_image_proc_node',
+        executable='convert_metric_node', # Il nodo principale di conversione
+        name='depth_converter',
         output='screen',
         
         # Mappiamo i topic di input e output
         remappings=[
-            ('camera/depth/image_raw', '/camera/depth/image_raw'), # Input: Topic RAW
-            ('camera/depth/camera_info', '/camera/camera_info'), # Input: Camera Info
-            # Output: Il nodo convertirà e pubblicherà il nuovo topic elaborato:
-            ('camera/depth/image_rect', '/depth/rect_color'), # Topic processato da usare in SLAM
-        ]
+        # Input: Topic RAW di profondità e Camera Info
+        ('image_raw', '/camera/depth/image_raw'), 
+        ('camera_info', '/camera/camera_info'), 
+        ('image', '/depth/rect_metric'), 
+    ]
     )
 
     stella_vslam_node = Node(
@@ -92,7 +92,7 @@ def generate_launch_description():
 
         remappings=[
             ('/camera/color/image_raw', '/camera/image_raw'), 
-            ('/camera/depth/image_raw', '/depth/rect_color'),
+            ('/camera/depth/image_raw', '/depth/rect_metric'),
             ('/camera/camera_info', '/camera/camera_info'), 
         ],
     )
@@ -103,7 +103,7 @@ def generate_launch_description():
         gazebo_start,
         spawn_turtlebot_entity,
         spawn_texture_box,
+        depth_converter_node,
         stella_vslam_node,
-        depth_image_processor
     ])
 
