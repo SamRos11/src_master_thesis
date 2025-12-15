@@ -17,6 +17,7 @@ sudo apt update
 sudo apt install ros-humble-image-publisher  
 sudo apt install -y ros-humble-cv-bridge  
 sudo apt install ros-dev-tools  
+sudo apt install ros-humble-navigation2 ros-humble-nav2-bringup
 
 3) Create a virtual envirorment:
 
@@ -74,9 +75,9 @@ wsl --export UbuntuSafe C:\Users\samue\ubuntu-backup.tar
 wsl --import UbuntuSafe D:\WSL\Ubuntu C:\Users\samue\ubuntu-backup.tar --version 2  
 
 - github upload
-git add .
-git commit -m "Descrivi qui cosa hai modificato"
-git push
+git add .  
+git commit -m "Descrivi qui cosa hai modificato"  
+git push  
 
 ros2 topic pub /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0}, angular: {z: 0.2}}" -r 10
 

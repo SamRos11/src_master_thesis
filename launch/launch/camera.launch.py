@@ -67,7 +67,7 @@ def generate_launch_description():
         # Input: Topic RAW di profondità e Camera Info
         ('image_raw', '/camera/depth/image_raw'), 
         ('camera_info', '/camera/camera_info'), 
-        ('image', '/depth/rect_metric'), 
+        ('image', '/depth/rect_metric'), #output
     ]
     )
 
@@ -91,7 +91,7 @@ def generate_launch_description():
         ], 
 
         remappings=[
-            ('/camera/color/image_raw', '/camera/image_raw'), 
+            ('/camera/color/image_raw', '/camera/image_raw'), #the first is the aspected one and the second is the true one
             ('/camera/depth/image_raw', '/depth/rect_metric'),
             ('/camera/camera_info', '/camera/camera_info'), 
         ],
