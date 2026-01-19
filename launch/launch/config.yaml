@@ -1,53 +1,29 @@
-#==============#
-# Camera Model #
-#==============#
-
+# Configurazione per RealSense D435i (640x480)
 Camera:
-    name: "Turtlebot3_Simulated_RGBD"
-    setup: "RGBD"
-    model: perspective 
-    
-    fx: 530.4669406576809 
-    fy: 530.4669406576809
-    cx: 320.5
-    cy: 240.5
-
-    cols: 640
-    rows: 480
-    
-    fps: 30.0 
-    color_order: RGB 
-    
-    distortion_model: radtan 
-    k1: 0.0 
-    k2: 0.0
-    k3: 0.0
-    k4: 0.0
-    p1: 0.0
-    p2: 0.0
-
-#================#
-# ORB Parameters #
-#================#
+  name: "RealSense D435i"
+  setup: "RGBD"
+  model: "perspective"
+  fx: 644.0   # Aumentato proporzionalmente
+  fy: 644.0
+  cx: 640.0   # Metà di 1280
+  cy: 360.0   # Metà di 720
+  k1: 0.0
+  k2: 0.0
+  p1: 0.0
+  p2: 0.0
+  k3: 0.0
+  fps: 30.0
+  cols: 1280
+  rows: 720
+  color_order: "RGB"
 
 Feature:
-    max_num_keypoints: 3500
-    scale_factor: 1.2
-    num_levels: 8
-    ini_fast_threshold: 20
-    min_fast_threshold: 7
+  max_num_keypoints: 2000
+  scale_factor: 1.2
+  num_levels: 8
+  ini_fast_threshold: 20
+  min_fast_threshold: 7
 
-#======================#
-# FramePublisher Setup #
-#======================#
-
-FramePublisher:
-    use_pangolin: true 
-    use_opencv_viewer: false
-    use_disable_for_monocular: false
-
-Optimizer:
-    max_num_iterations: 100 
-    
-Initializer:
-    min_num_triangulated_pts: 20
+Depth:
+  min_depth: 0.5
+  max_depth: 5.0

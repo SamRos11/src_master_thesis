@@ -1,85 +1,292 @@
-TOKEN: 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
+# Project Setup and Installation Guide
 
+This guide details the steps to set up the ROS 2 Humble environment, configure the Python virtual environment, install dependencies, and build `stella_vslam` with RealSense support.
 
-1) Download ROS2 from the documentation
+## 1. System Setup & ROS 2 Humble Installation
 
+First, ensure the locale is set correctly and install ROS 2 Humble.
 
-2) Install necessary librieries:  
+```bash
+# Set Locale
+sudo apt update && sudo apt install locales
+sudo locale-gen en_US en_US.UTF-8
+sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
 
-python3 -m pip install --user ultralytics deep_sort_realtime opencv-python-headless scipy  
-pip install --upgrade pip setuptools wheel  
-python3 -m pip install --user --force-reinstall numpy==1.24.4 
-pip install scipy opencv-python-headless  
-pip install rclpy  
-pip install ultralytics deep_sort_realtime  
-pip install image_publisher  
-sudo apt update  
-sudo apt install ros-humble-image-publisher  
-sudo apt install -y ros-humble-cv-bridge  
-sudo apt install ros-dev-tools  
-sudo apt install ros-humble-navigation2 ros-humble-nav2-bringup
+# Add ROS 2 Repository
+sudo apt install software-properties-common
+sudo add-apt-repository universe
+sudo apt update && sudo apt install curl -y
+sudo curl -sSL [https://raw.githubusercontent.com/ros/rosdistro/master/ros.key](https://raw.githubusercontent.com/ros/rosdistro/master/ros.key) -o /usr/share/keyrings/ros-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] [http://packages.ros.org/ros2/ubuntu](http://packages.ros.org/ros2/ubuntu) $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
-3) Create a virtual envirorment:
-
-sudo apt update  
-sudo apt upgrade -y  
-sudo apt install -y python3-pip python3-venv git build-essential  
-python3 -m venv ~/ros2_env  
-source ~/ros2_env/bin/activate  
-pip install --ignore-installed numpy==1.24.4  
-pip install ultralytics deep-sort-realtime  
-sudo apt install python3-cv-bridge 
-pip install rclpy ament-package opencv-python  
-pip install Cython  
-pip install empy==3.3.4  
-pip install catkin_pkg  
-pip install lark  
-
-4) Source and building:    
-
-echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc   
-echo "source ~/ros2_ws/install/setup.bash" >> ~/.bashrc  
-source ~/ros2_env/bin/activate    
-cd ~/ros2_ws   
-colcon build --symlink-install  
-source install/setup.bash  
-ros2 run tracking_pkg tracking_node
-
-5) stella_vslam installation: 
-
-mkdir ~/dev_libs  
-cd ~/dev_libs  
-git clone --recursive https://github.com/stella-cv/stella_vslam.git
-then follow the documentation
-
-6) Gazebo installation: 
-sudo apt update  
-sudo apt install gazebo  
-sudo apt install ros-humble-gazebo-ros-pkgs  
-gazebo  
-
-7) Turtlebot installation:  
-
-sudo apt install ros-humble-turtlebot3  
-sudo apt install ros-humble-turtlebot3-simulations  
+# Install ROS 2 Base and Dev Tools
 sudo apt update
-sudo apt install python3-lxml 
-export TURTLEBOT3_MODEL=burger  
-ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py  
- 
+sudo apt install -y ros-humble-desktop
+sudo apt install -y ros-dev-tools python3-colcon-common-extensions
 
+# Install Additional ROS Packages (Nav2, Vision, Gazebo, Turtlebot3)
+sudo apt update
+sudo apt install -y ros-humble-navigation2 ros-humble-nav2-bringup \
+    ros-humble-cv-bridge ros-humble-image-transport \
+    ros-humble-vision-opencv \
+    ros-humble-gazebo-ros-pkgs \
+    ros-humble-turtlebot3* \
+    python3-pip python3-venv
+```
 
-OTHERS:
-- command to export\import Linux  
-wsl --export UbuntuSafe C:\Users\samue\ubuntu-backup.tar  
-wsl --import UbuntuSafe D:\WSL\Ubuntu C:\Users\samue\ubuntu-backup.tar --version 2  
+## 2. Python Environment Setup
 
-- github upload
-git add .  
-git commit -m "Descrivi qui cosa hai modificato"  
-git push  
+We use a virtual environment with access to system site packages to manage Python dependencies without breaking the system ROS installation.
 
-ros2 topic pub /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0}, angular: {z: 0.2}}" -r 10
+```bash
+# Create the environment with access to system packages
+python3 -m venv --system-site-packages ~/ros2_env
 
+# Activate the environment (Required before building/running)
+source ~/ros2_env/bin/activate
 
+# Upgrade pip inside the env
+pip install --upgrade pip
 
+# Install AI & Helper Libraries
+# Note: DO NOT install rclpy or opencv via pip here unless strictly necessary.
+pip install ultralytics deep-sort-realtime
+pip install "numpy<2.0" scipy
+pip install setuptools==58.2.0  # Downgrade setuptools to avoid warnings in ROS 2 builds
+pip install transforms3d
+pip install cffi
+
+# Configure .bashrc for auto-setup (Optional)
+echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+echo "source ~/ros2_env/bin/activate" >> ~/.bashrc 
+echo "export TURTLEBOT3_MODEL=burger" >> ~/.bashrc
+echo "export PYTHONPATH=$PYTHONPATH:/home/samuele/ros2_env/lib/python3.10/site-packages" >> ~/.bashrc
+source ~/.bashrc
+```
+
+## 3. Workspace Initialization
+
+Create the workspace and install ROS dependencies.
+
+```bash
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws
+
+# Clone your packages into src/ here (e.g., git clone ...)
+
+# Install dependencies defined in package.xml files
+sudo rosdep init
+rosdep update
+rosdep install --from-paths src -y --ignore-src
+
+# Initial Build
+colcon build --symlink-install
+source install/setup.bash
+```
+
+## 4. Installing Stella VSLAM Dependencies
+
+This section covers the installation of system libraries and manual compilation of required third-party libraries (Eigen, OpenCV, g2o, etc.).
+
+### 4.1 System Dependencies
+
+```bash
+sudo apt update -y
+sudo apt upgrade -y --no-install-recommends
+
+# Basic tools
+sudo apt install -y build-essential pkg-config cmake git wget curl unzip
+
+# Math & Linear Algebra
+sudo apt install -y libatlas-base-dev libsuitesparse-dev gfortran
+
+# OpenCV System Dependencies
+sudo apt install -y libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev \
+    libswscale-dev libavresample-dev libtbb-dev
+
+# Other Utils
+sudo apt install -y binutils-dev libyaml-cpp-dev libgflags-dev sqlite3 libsqlite3-dev libglew-dev
+```
+
+### 4.2 Manual Build of Libraries
+
+> **Note:** These commands download sources to `/tmp` or `~/dev_libs` (adjust paths as needed), compile them, and install them to `/usr/local`.
+
+**Eigen 3.3.7**
+```bash
+cd /tmp
+wget -q [https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.bz2](https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.bz2)
+tar xf eigen-3.3.7.tar.bz2 && rm -rf eigen-3.3.7.tar.bz2
+cd eigen-3.3.7
+mkdir -p build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+make -j4 && sudo make install
+```
+
+**OpenCV 4.5.5 (Manual Build)**
+```bash
+cd /tmp
+wget -q [https://github.com/opencv/opencv/archive/4.5.5.zip](https://github.com/opencv/opencv/archive/4.5.5.zip)
+unzip -q 4.5.5.zip && rm -rf 4.5.5.zip
+# Download aruco module
+wget -q [https://github.com/opencv/opencv_contrib/archive/refs/tags/4.5.5.zip](https://github.com/opencv/opencv_contrib/archive/refs/tags/4.5.5.zip) -O opencv_contrib-4.5.5.zip
+unzip -q opencv_contrib-4.5.5.zip && rm -rf opencv_contrib-4.5.5.zip
+mkdir -p extra && mv opencv_contrib-4.5.5/modules/aruco extra
+rm -rf opencv_contrib-4.5.5
+
+# Build OpenCV
+cd opencv-4.5.5
+mkdir -p build && cd build
+cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DBUILD_DOCS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF \
+    -DENABLE_CXX11=ON -DENABLE_FAST_MATH=ON -DWITH_EIGEN=ON \
+    -DWITH_FFMPEG=ON -DWITH_TBB=ON -DWITH_OPENMP=ON \
+    -DOPENCV_EXTRA_MODULES_PATH=/tmp/extra \
+    ..
+make -j4 && sudo make install
+```
+
+**FBoW**
+```bash
+cd /tmp
+git clone [https://github.com/stella-cv/FBoW.git](https://github.com/stella-cv/FBoW.git)
+cd FBoW && mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+make -j4 && sudo make install
+```
+
+**g2o (Graph Optimization)**
+```bash
+cd /tmp
+git clone [https://github.com/RainerKuemmerle/g2o.git](https://github.com/RainerKuemmerle/g2o.git)
+cd g2o && git checkout 20230223_git
+mkdir build && cd build
+cmake \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DBUILD_SHARED_LIBS=ON \
+    -DG2O_USE_CSPARSE=ON \
+    -DG2O_USE_OPENGL=OFF -DG2O_BUILD_APPS=OFF -DG2O_BUILD_EXAMPLES=OFF \
+    ..
+make -j4 && sudo make install
+```
+
+**backward-cpp & Pangolin**
+```bash
+# backward-cpp
+cd /tmp
+git clone [https://github.com/bombela/backward-cpp.git](https://github.com/bombela/backward-cpp.git)
+cd backward-cpp && git checkout 5ffb2c879ebdbea3bdb8477c671e32b1c984beaa
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+make -j4 && sudo make install
+
+# Pangolin
+cd /tmp
+git clone [https://github.com/stevenlovegrove/Pangolin.git](https://github.com/stevenlovegrove/Pangolin.git)
+cd Pangolin && git checkout eab3d3449a33a042b1ee7225e1b8b593b1b21e3e
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_EXAMPLES=OFF ..
+make -j4 && sudo make install
+```
+
+## 5. Building Stella VSLAM
+
+```bash
+# 1. Install Core Library
+mkdir -p ~/lib && cd ~/lib
+git clone --recursive [https://github.com/stella-cv/stella_vslam.git](https://github.com/stella-cv/stella_vslam.git)
+cd stella_vslam && mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+make -j4 && sudo make install
+
+# 2. Install Pangolin Viewer
+cd ~/lib
+git clone --recursive [https://github.com/stella-cv/pangolin_viewer.git](https://github.com/stella-cv/pangolin_viewer.git)
+mkdir -p pangolin_viewer/build && cd pangolin_viewer/build
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+make -j && sudo make install
+
+# 3. Install Examples (Optional)
+cd ~/lib
+git clone --recursive [https://github.com/stella-cv/stella_vslam_examples.git](https://github.com/stella-cv/stella_vslam_examples.git)
+mkdir -p stella_vslam_examples/build && cd stella_vslam_examples/build
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_STACK_TRACE_LOGGER=ON ..
+make -j
+
+# 4. Build ROS 2 Package
+cd ~/lib/stella_vslam/build
+source /opt/ros/${ROS_DISTRO}/setup.bash
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+make -j && sudo make install
+
+# 5. Build Workspace
+cd ~/ros2_ws
+rosdep install -y -i --from-paths ~/ros2_ws/src --skip-keys=stella_vslam
+colcon build --symlink-install
+```
+
+## 6. RealSense Setup
+
+Install drivers and ROS 2 wrapper for Intel RealSense cameras.
+
+```bash
+# Register Public Key and Repo
+sudo mkdir -p /etc/apt/keyrings
+curl -sSf [https://librealsense.intel.com/Debian/librealsense.pgp](https://librealsense.intel.com/Debian/librealsense.pgp) | sudo tee /etc/apt/keyrings/librealsense.pgp > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/librealsense.pgp] [https://librealsense.intel.com/Debian/apt-repo](https://librealsense.intel.com/Debian/apt-repo) $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/librealsense.list
+
+# Install SDK and ROS Pkg
+sudo apt update
+sudo apt install librealsense2-utils librealsense2-dkms
+sudo apt install ros-humble-realsense2-camera
+```
+
+## 7. Troubleshooting & Final Configuration
+
+### OpenCV Version Conflict Fix
+If you encounter linking errors due to conflicts between the manual OpenCV install and the system ROS OpenCV, follow these steps to remove the manual version and link against the system version.
+
+```bash
+# 1. Remove manually installed OpenCV
+sudo rm -rf /usr/local/lib/libopencv*
+sudo rm -rf /usr/local/include/opencv4
+sudo rm -rf /usr/local/lib/cmake/opencv4
+
+# 2. Rebuild dependencies (g2o, Pangolin, fbow) to link against system libraries
+cd ~/dev_libs/g2o/build
+rm -rf * && cmake .. && make -j$(nproc) && sudo make install && sudo ldconfig
+
+cd ~/dev_libs/Pangolin/build
+rm -rf * && cmake .. && make -j$(nproc) && sudo make install && sudo ldconfig
+
+cd ~/dev_libs/fbow/build
+rm -rf * && cmake .. && make -j$(nproc) && sudo make install && sudo ldconfig
+
+# 3. Rebuild Stella VSLAM
+cd ~/lib/stella_vslam/build
+rm -rf * && cmake .. 
+# Verify output says: "Found OpenCV: /usr (found version 4.5.4)"
+make -j$(nproc) && sudo make install && sudo ldconfig
+
+# 4. Verify Linkage
+ldd /usr/local/lib/libstella_vslam.so | grep opencv_core
+# Correct output should point to: /lib/x86_64-linux-gnu/...
+
+# 5. Final Workspace Clean & Build
+cd ~/ros2_ws
+rm -rf build install
+colcon build --symlink-install --cmake-args -Dstella_vslam_DIR=/usr/local/lib/cmake/stella_vslam
+source install/setup.bash
+```
+
+### Fix Window Crashes
+Install legacy GTK libs if the viewer crashes.
+
+```bash
+sudo apt update
+sudo apt install -y libgtk2.0-dev pkg-config libcanberra-gtk-module
+```

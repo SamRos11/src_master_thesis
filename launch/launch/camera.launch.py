@@ -13,6 +13,12 @@ import os
 
 def generate_launch_description():
 
+    home_dir = os.environ['HOME'] 
+    
+    vocab_path = os.path.join(home_dir, 'ros2_ws/src/launch/launch/vocab/orb_vocab.fbow')
+    config_path = os.path.join(home_dir, 'ros2_ws/src/launch/launch/config.yaml')
+    map_db_path = os.path.join(home_dir, '.ros/stella_map_output.msg')
+
     use_sim_time = SetLaunchConfiguration(name='use_sim_time', value='True')
 
     turtlebot3_pkg_dir = get_package_share_directory('turtlebot3_gazebo')
@@ -71,39 +77,62 @@ def generate_launch_description():
     ]
     )
 
+    realsense_node = Node(
+        package='realsense2_camera',
+        executable='realsense2_camera_node',
+        namespace='camera',
+        name='camera',
+        parameters=[{
+            'initial_reset': True,
+            'align_depth.enable': True,
+            'pointcloud.enable': False,
+            'enable_sync': True,
+            
+            # Disable IMU to stop Hardware Errors
+            'enable_gyro': True,
+            'enable_accel': True,
+            
+            # Force Native Resolutions (HD)
+            # We match what the camera WANTS to do, so it doesn't fight us.
+            'depth_module.profile': '848x480x30',
+            'rgb_camera.profile': '1280x720x30',
+            
+            # Auto Exposure helps with synchronization
+            'enable_auto_exposure': True
+        }],
+        output='screen'
+    )
+
     stella_vslam_node = Node(
         package='stella_vslam_ros',
         executable='run_slam',
         name='stella_slam',
         output='screen', 
-
         
         arguments=[
-            '-v', '/home/samu/dev_libs/stella_vslam_examples/build/orb_vocab.fbow', # Vocabolario
-            '-c', '/home/samu/ros2_ws/src/launch/launch/config.yaml', 
-            '--map-db-out', '/home/samu/.ros/stella_map_output.msg',
-            #'--log-level', 'debug'
+            '-v', vocab_path,
+            '-c', config_path,
+            '--map-db-out', map_db_path,
         ],
-
         parameters=[
-            {'use_sim_time': True},
-            {'publish_tf': False},
+            {'use_sim_time': False},
+            {'publish_tf': True},
         ], 
-
         remappings=[
-            ('/camera/color/image_raw', '/camera/image_raw'), #the first is the aspected one and the second is the true one
-            ('/camera/depth/image_raw', '/depth/rect_metric'),
-            ('/camera/camera_info', '/camera/camera_info'), 
+            ('/camera/color/image_raw', '/camera/camera/color/image_raw'), 
+            ('/camera/depth/image_raw', '/camera/camera/aligned_depth_to_color/image_raw'),
+            ('/camera/camera_info', '/camera/camera/color/camera_info'), 
         ],
     )
 
     return LaunchDescription([
-        use_sim_time,
-        set_depth_env,
-        gazebo_start,
-        spawn_turtlebot_entity,
-        spawn_texture_box,
-        depth_converter_node,
+        #use_sim_time,
+        #set_depth_env,
+        #gazebo_start,
+        #spawn_turtlebot_entity,
+        #spawn_texture_box,
+        #depth_converter_node,
+        realsense_node,
         stella_vslam_node,
     ])
 
