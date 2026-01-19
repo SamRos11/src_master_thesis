@@ -49,7 +49,6 @@ source ~/ros2_env/bin/activate
 # Upgrade pip inside the env
 pip install --upgrade pip
 
-# Install AI & Helper Libraries
 # Note: DO NOT install rclpy or opencv via pip here unless strictly necessary.
 pip install ultralytics deep-sort-realtime
 pip install "numpy<2.0" scipy
@@ -73,7 +72,7 @@ Create the workspace and install ROS dependencies.
 mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws
 
-# Clone your packages into src/ here (e.g., git clone ...)
+# Clone this repo 
 
 # Install dependencies defined in package.xml files
 sudo rosdep init
@@ -87,7 +86,7 @@ source install/setup.bash
 
 ## 4. Installing Stella VSLAM Dependencies
 
-This section covers the installation of system libraries and manual compilation of required third-party libraries (Eigen, OpenCV, g2o, etc.).
+This section covers the installation of system libraries and manual compilation of required third-party libraries.
 
 ### 4.1 System Dependencies
 
@@ -107,15 +106,16 @@ sudo apt install -y libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil
 
 # Other Utils
 sudo apt install -y binutils-dev libyaml-cpp-dev libgflags-dev sqlite3 libsqlite3-dev libglew-dev
+
+# Create the common library directory
+mkdir -p ~/lib
 ```
 
 ### 4.2 Manual Build of Libraries
 
-> **Note:** These commands download sources to `/tmp` or `~/dev_libs` (adjust paths as needed), compile them, and install them to `/usr/local`.
-
 **Eigen 3.3.7**
 ```bash
-cd /tmp
+cd ~/lib
 wget -q [https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.bz2](https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.bz2)
 tar xf eigen-3.3.7.tar.bz2 && rm -rf eigen-3.3.7.tar.bz2
 cd eigen-3.3.7
@@ -126,7 +126,7 @@ make -j4 && sudo make install
 
 **OpenCV 4.5.5 (Manual Build)**
 ```bash
-cd /tmp
+cd ~/lib
 wget -q [https://github.com/opencv/opencv/archive/4.5.5.zip](https://github.com/opencv/opencv/archive/4.5.5.zip)
 unzip -q 4.5.5.zip && rm -rf 4.5.5.zip
 # Download aruco module
@@ -144,23 +144,25 @@ cmake \
     -DBUILD_DOCS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF \
     -DENABLE_CXX11=ON -DENABLE_FAST_MATH=ON -DWITH_EIGEN=ON \
     -DWITH_FFMPEG=ON -DWITH_TBB=ON -DWITH_OPENMP=ON \
-    -DOPENCV_EXTRA_MODULES_PATH=/tmp/extra \
+    -DOPENCV_EXTRA_MODULES_PATH=~/lib/opencv-4.5.5/extra \
     ..
 make -j4 && sudo make install
 ```
 
-**FBoW**
+**FBoW (stella-cv version)**
 ```bash
-cd /tmp
-git clone [https://github.com/stella-cv/FBoW.git](https://github.com/stella-cv/FBoW.git)
-cd FBoW && mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
-make -j4 && sudo make install
+cd ~/lib
+git clone [https://github.com/stella-cv/fbow.git](https://github.com/stella-cv/fbow.git)
+cd fbow
+mkdir build && cd build
+cmake ..
+make -j$(nproc) && sudo make install
+sudo ldconfig
 ```
 
 **g2o (Graph Optimization)**
 ```bash
-cd /tmp
+cd ~/lib
 git clone [https://github.com/RainerKuemmerle/g2o.git](https://github.com/RainerKuemmerle/g2o.git)
 cd g2o && git checkout 20230223_git
 mkdir build && cd build
@@ -174,18 +176,19 @@ cmake \
 make -j4 && sudo make install
 ```
 
-**backward-cpp & Pangolin**
+**backward-cpp**
 ```bash
-# backward-cpp
-cd /tmp
+cd ~/lib
 git clone [https://github.com/bombela/backward-cpp.git](https://github.com/bombela/backward-cpp.git)
 cd backward-cpp && git checkout 5ffb2c879ebdbea3bdb8477c671e32b1c984beaa
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
 make -j4 && sudo make install
+```
 
-# Pangolin
-cd /tmp
+**Pangolin**
+```bash
+cd ~/lib
 git clone [https://github.com/stevenlovegrove/Pangolin.git](https://github.com/stevenlovegrove/Pangolin.git)
 cd Pangolin && git checkout eab3d3449a33a042b1ee7225e1b8b593b1b21e3e
 mkdir build && cd build
@@ -197,7 +200,7 @@ make -j4 && sudo make install
 
 ```bash
 # 1. Install Core Library
-mkdir -p ~/lib && cd ~/lib
+cd ~/lib
 git clone --recursive [https://github.com/stella-cv/stella_vslam.git](https://github.com/stella-cv/stella_vslam.git)
 cd stella_vslam && mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
@@ -257,13 +260,13 @@ sudo rm -rf /usr/local/include/opencv4
 sudo rm -rf /usr/local/lib/cmake/opencv4
 
 # 2. Rebuild dependencies (g2o, Pangolin, fbow) to link against system libraries
-cd ~/dev_libs/g2o/build
+cd ~/lib/g2o/build
 rm -rf * && cmake .. && make -j$(nproc) && sudo make install && sudo ldconfig
 
-cd ~/dev_libs/Pangolin/build
+cd ~/lib/Pangolin/build
 rm -rf * && cmake .. && make -j$(nproc) && sudo make install && sudo ldconfig
 
-cd ~/dev_libs/fbow/build
+cd ~/lib/fbow/build
 rm -rf * && cmake .. && make -j$(nproc) && sudo make install && sudo ldconfig
 
 # 3. Rebuild Stella VSLAM
@@ -284,7 +287,7 @@ source install/setup.bash
 ```
 
 ### Fix Window Crashes
-Install legacy GTK libs if the viewer crashes.
+Install legacy GTK libs if the camera viewer crashes.
 
 ```bash
 sudo apt update
