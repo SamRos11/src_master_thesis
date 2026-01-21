@@ -14,9 +14,11 @@ import os
 def generate_launch_description():
 
     home_dir = os.environ['HOME'] 
-    
-    vocab_path = os.path.join(home_dir, 'ros2_ws/src/launch/launch/vocab/orb_vocab.fbow')
-    config_path = os.path.join(home_dir, 'ros2_ws/src/launch/launch/config.yaml')
+
+    share_dir = get_package_share_directory('stella_launcher')  
+
+    config_path = os.path.join(share_dir, 'launch', 'config.yaml')
+    vocab_path = os.path.join(share_dir, 'launch', 'vocab', 'orb_vocab.fbow')
     map_db_path = os.path.join(home_dir, '.ros/stella_map_output.msg')
 
     use_sim_time = SetLaunchConfiguration(name='use_sim_time', value='True')
@@ -77,6 +79,13 @@ def generate_launch_description():
     ]
     )
 
+    static_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 'odom', 'camera_link']
+    )
+
     realsense_node = Node(
         package='realsense2_camera',
         executable='realsense2_camera_node',
@@ -87,15 +96,16 @@ def generate_launch_description():
             'align_depth.enable': True,
             'pointcloud.enable': False,
             'enable_sync': True,
-            
+            'config_file': config_path,
             # Disable IMU to stop Hardware Errors
-            'enable_gyro': True,
-            'enable_accel': True,
+            'enable_gyro': False,
+            'enable_accel': False,
+            'unite_imu_method': 0,
             
             # Force Native Resolutions (HD)
             # We match what the camera WANTS to do, so it doesn't fight us.
-            'depth_module.profile': '848x480x30',
-            'rgb_camera.profile': '1280x720x30',
+            'depth_module.profile': '848x480x15',
+            'rgb_camera.profile': '1280x720x15',
             
             # Auto Exposure helps with synchronization
             'enable_auto_exposure': True
@@ -134,5 +144,6 @@ def generate_launch_description():
         #depth_converter_node,
         realsense_node,
         stella_vslam_node,
+        static_tf
     ])
 

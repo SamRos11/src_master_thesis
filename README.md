@@ -17,8 +17,8 @@ export LANG=en_US.UTF-8
 sudo apt install software-properties-common
 sudo add-apt-repository universe
 sudo apt update && sudo apt install curl -y
-sudo curl -sSL [https://raw.githubusercontent.com/ros/rosdistro/master/ros.key](https://raw.githubusercontent.com/ros/rosdistro/master/ros.key) -o /usr/share/keyrings/ros-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] [http://packages.ros.org/ros2/ubuntu](http://packages.ros.org/ros2/ubuntu) $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
 # Install ROS 2 Base and Dev Tools
 sudo apt update
@@ -78,10 +78,6 @@ cd ~/ros2_ws
 sudo rosdep init
 rosdep update
 rosdep install --from-paths src -y --ignore-src
-
-# Initial Build
-colcon build --symlink-install
-source install/setup.bash
 ```
 
 ## 4. Installing Stella VSLAM Dependencies
@@ -101,8 +97,7 @@ sudo apt install -y build-essential pkg-config cmake git wget curl unzip
 sudo apt install -y libatlas-base-dev libsuitesparse-dev gfortran
 
 # OpenCV System Dependencies
-sudo apt install -y libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev \
-    libswscale-dev libavresample-dev libtbb-dev
+sudo apt install -y libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libtbb-dev
 
 # Other Utils
 sudo apt install -y binutils-dev libyaml-cpp-dev libgflags-dev sqlite3 libsqlite3-dev libglew-dev
@@ -116,7 +111,7 @@ mkdir -p ~/lib
 **Eigen 3.3.7**
 ```bash
 cd ~/lib
-wget -q [https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.bz2](https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.bz2)
+wget -q https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.bz2
 tar xf eigen-3.3.7.tar.bz2 && rm -rf eigen-3.3.7.tar.bz2
 cd eigen-3.3.7
 mkdir -p build && cd build
@@ -127,32 +122,42 @@ make -j4 && sudo make install
 **OpenCV 4.5.5 (Manual Build)**
 ```bash
 cd ~/lib
-wget -q [https://github.com/opencv/opencv/archive/4.5.5.zip](https://github.com/opencv/opencv/archive/4.5.5.zip)
-unzip -q 4.5.5.zip && rm -rf 4.5.5.zip
-# Download aruco module
-wget -q [https://github.com/opencv/opencv_contrib/archive/refs/tags/4.5.5.zip](https://github.com/opencv/opencv_contrib/archive/refs/tags/4.5.5.zip) -O opencv_contrib-4.5.5.zip
-unzip -q opencv_contrib-4.5.5.zip && rm -rf opencv_contrib-4.5.5.zip
-mkdir -p extra && mv opencv_contrib-4.5.5/modules/aruco extra
-rm -rf opencv_contrib-4.5.5
+# Download OpenCV Base
+wget -q https://github.com/opencv/opencv/archive/4.5.5.zip
+unzip -q 4.5.5.zip && rm 4.5.5.zip
+
+# Download OpenCV Contrib (Extra Modules)
+wget -q https://github.com/opencv/opencv_contrib/archive/refs/tags/4.5.5.zip -O opencv_contrib-4.5.5.zip
+unzip -q opencv_contrib-4.5.5.zip && rm opencv_contrib-4.5.5.zip
 
 # Build OpenCV
-cd opencv-4.5.5
-mkdir -p build && cd build
+cd ~/lib/opencv-4.5.5
+mkdir build && cd build
+
 cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr/local \
-    -DBUILD_DOCS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF \
-    -DENABLE_CXX11=ON -DENABLE_FAST_MATH=ON -DWITH_EIGEN=ON \
-    -DWITH_FFMPEG=ON -DWITH_TBB=ON -DWITH_OPENMP=ON \
-    -DOPENCV_EXTRA_MODULES_PATH=~/lib/opencv-4.5.5/extra \
+    -DBUILD_DOCS=OFF \
+    -DBUILD_EXAMPLES=OFF \
+    -DBUILD_TESTS=OFF \
+    -DBUILD_PERF_TESTS=OFF \
+    -DENABLE_CXX11=ON \
+    -DENABLE_FAST_MATH=ON \
+    -DWITH_EIGEN=ON \
+    -DWITH_FFMPEG=ON \
+    -DWITH_TBB=ON \
+    -DWITH_OPENMP=ON \
+    -DOPENCV_EXTRA_MODULES_PATH=~/lib/opencv_contrib-4.5.5/modules \
     ..
-make -j4 && sudo make install
+make -j4
+sudo make install
+sudo ldconfig
 ```
 
 **FBoW (stella-cv version)**
 ```bash
 cd ~/lib
-git clone [https://github.com/stella-cv/fbow.git](https://github.com/stella-cv/fbow.git)
+git clone https://github.com/stella-cv/fbow.git
 cd fbow
 mkdir build && cd build
 cmake ..
@@ -163,7 +168,7 @@ sudo ldconfig
 **g2o (Graph Optimization)**
 ```bash
 cd ~/lib
-git clone [https://github.com/RainerKuemmerle/g2o.git](https://github.com/RainerKuemmerle/g2o.git)
+git clone https://github.com/RainerKuemmerle/g2o.git
 cd g2o && git checkout 20230223_git
 mkdir build && cd build
 cmake \
@@ -179,7 +184,7 @@ make -j4 && sudo make install
 **backward-cpp**
 ```bash
 cd ~/lib
-git clone [https://github.com/bombela/backward-cpp.git](https://github.com/bombela/backward-cpp.git)
+git clone https://github.com/bombela/backward-cpp.git
 cd backward-cpp && git checkout 5ffb2c879ebdbea3bdb8477c671e32b1c984beaa
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
@@ -189,7 +194,7 @@ make -j4 && sudo make install
 **Pangolin**
 ```bash
 cd ~/lib
-git clone [https://github.com/stevenlovegrove/Pangolin.git](https://github.com/stevenlovegrove/Pangolin.git)
+git clone https://github.com/stevenlovegrove/Pangolin.git
 cd Pangolin && git checkout eab3d3449a33a042b1ee7225e1b8b593b1b21e3e
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_EXAMPLES=OFF ..
@@ -200,22 +205,23 @@ make -j4 && sudo make install
 
 ```bash
 # 1. Install Core Library
+# 1. Install Core Library
 cd ~/lib
-git clone --recursive [https://github.com/stella-cv/stella_vslam.git](https://github.com/stella-cv/stella_vslam.git)
+git clone --recursive https://github.com/stella-cv/stella_vslam.git
 cd stella_vslam && mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 make -j4 && sudo make install
 
 # 2. Install Pangolin Viewer
 cd ~/lib
-git clone --recursive [https://github.com/stella-cv/pangolin_viewer.git](https://github.com/stella-cv/pangolin_viewer.git)
+git clone --recursive https://github.com/stella-cv/pangolin_viewer.git
 mkdir -p pangolin_viewer/build && cd pangolin_viewer/build
 cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 make -j && sudo make install
 
 # 3. Install Examples (Optional)
 cd ~/lib
-git clone --recursive [https://github.com/stella-cv/stella_vslam_examples.git](https://github.com/stella-cv/stella_vslam_examples.git)
+git clone --recursive https://github.com/stella-cv/stella_vslam_examples.git
 mkdir -p stella_vslam_examples/build && cd stella_vslam_examples/build
 cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_STACK_TRACE_LOGGER=ON ..
 make -j
@@ -239,8 +245,8 @@ Install drivers and ROS 2 wrapper for Intel RealSense cameras.
 ```bash
 # Register Public Key and Repo
 sudo mkdir -p /etc/apt/keyrings
-curl -sSf [https://librealsense.intel.com/Debian/librealsense.pgp](https://librealsense.intel.com/Debian/librealsense.pgp) | sudo tee /etc/apt/keyrings/librealsense.pgp > /dev/null
-echo "deb [signed-by=/etc/apt/keyrings/librealsense.pgp] [https://librealsense.intel.com/Debian/apt-repo](https://librealsense.intel.com/Debian/apt-repo) $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/librealsense.list
+curl -sSf https://librealsense.intel.com/Debian/librealsense.pgp | sudo tee /etc/apt/keyrings/librealsense.pgp > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/librealsense.pgp] https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/librealsense.list
 
 # Install SDK and ROS Pkg
 sudo apt update
