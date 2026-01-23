@@ -1,21 +1,26 @@
-# Configurazione per RealSense D435i (640x480)
+# Configurazione per RealSense D435i (Adattata a 640x480 @ 15FPS)
 Camera:
   name: "RealSense D435i"
   setup: "RGBD"
   model: "perspective"
-  fx: 644.0   # Aumentato proporzionalmente
-  fy: 644.0
-  cx: 640.0   # Metà di 1280
-  cy: 360.0   # Metà di 720
+  
+  # I parametri focali scalano con la risoluzione
+  fx: 322.0   # Dimezzato (era 644)
+  fy: 322.0   # Dimezzato (era 644)
+  cx: 320.0   # Centro di 640
+  cy: 240.0   # Centro di 480
+  
   k1: 0.0
   k2: 0.0
   p1: 0.0
   p2: 0.0
   k3: 0.0
-  fps: 30.0
-  cols: 1280
-  rows: 720
-  color_order: "RGB"
+  
+  fps: 30.0    # Importante: deve coincidere con la camera!
+  cols: 1280    # Risoluzione VGA
+  rows: 720    # Risoluzione VGA
+  
+  color_order: "RGB" # Se i colori sono invertiti, cambia in "BGR" qui
 
 Feature:
   max_num_keypoints: 2000

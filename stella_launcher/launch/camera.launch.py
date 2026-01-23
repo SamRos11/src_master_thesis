@@ -19,7 +19,7 @@ def generate_launch_description():
 
     config_path = os.path.join(share_dir, 'launch', 'config.yaml')
     vocab_path = os.path.join(share_dir, 'launch', 'vocab', 'orb_vocab.fbow')
-    map_db_path = os.path.join(home_dir, '.ros/stella_map_output.msg')
+    map_db_path = os.path.join(home_dir, '.ros/stella_map_output.msg') 
 
     use_sim_time = SetLaunchConfiguration(name='use_sim_time', value='True')
 
@@ -92,24 +92,22 @@ def generate_launch_description():
         namespace='camera',
         name='camera',
         parameters=[{
-            'initial_reset': True,
-            'align_depth.enable': True,
-            'pointcloud.enable': False,
-            'enable_sync': True,
-            'config_file': config_path,
-            # Disable IMU to stop Hardware Errors
-            'enable_gyro': False,
-            'enable_accel': False,
-            'unite_imu_method': 0,
-            
-            # Force Native Resolutions (HD)
-            # We match what the camera WANTS to do, so it doesn't fight us.
-            'depth_module.profile': '848x480x15',
-            'rgb_camera.profile': '1280x720x15',
-            
-            # Auto Exposure helps with synchronization
-            'enable_auto_exposure': True
-        }],
+                'enable_gyro': False,
+                'enable_accel': False,
+                # Spegniamo gli IR per salvare la vita alla USB
+                'enable_infra1': False,
+                'enable_infra2': False,
+                'unite_imu_method': 0,
+                
+                # Allineiamoci a quello che la camera VUOLE fare
+                'rgb_camera.profile': '1280x720x30',
+                'depth_module.profile': '848x480x30', # Depth spesso ha risoluzione diversa, va bene così
+                
+                'enable_sync': True,
+                'align_depth.enable': True,
+                'enable_auto_exposure': True,
+                'initial_reset': False
+            }],
         output='screen'
     )
 

@@ -16,7 +16,7 @@ class TrackingNode(Node):
         # Subscriber: questo riceve già i frame della webcam da ROS
         self.subscription = self.create_subscription(
             Image,
-            '/camera/color/image_raw',
+            '/camera/camera/color/image_raw',
             self.image_callback,
             10
         )

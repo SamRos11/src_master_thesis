@@ -299,3 +299,13 @@ Install legacy GTK libs if the camera viewer crashes.
 sudo apt update
 sudo apt install -y libgtk2.0-dev pkg-config libcanberra-gtk-module
 ```
+
+### Tracking Node Dependencies (Python)
+To run the YOLO + DeepSORT tracking node, you must install specific versions of libraries to ensure compatibility with ROS 2 Humble (which requires NumPy 1.x).
+
+Run the following command:
+
+```bash
+# Install YOLO, DeepSORT, and ensure compatibility with ROS 2
+pip3 install ultralytics deep-sort-realtime "numpy<2.0" "opencv-python<4.11"
+```
