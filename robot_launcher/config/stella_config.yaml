@@ -16,7 +16,7 @@ Camera:
   p2: 0.0
   k3: 0.0
   
-  fps: 30.0    # Importante: deve coincidere con la camera!
+  fps: 15.0    # Importante: deve coincidere con la camera!
   cols: 640    # Risoluzione VGA
   rows: 480    # Risoluzione VGA
   

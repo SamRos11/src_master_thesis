@@ -22,58 +22,11 @@ class ControllerNode(Node):
         self.bridge = CvBridge()
 
         ## SUBSCRIBERS
-        #self.create_subscription(CameraInfo, '/camera/camera_info', self.info_callback, 10)
-        #self.create_subscription(PersonTrackerArray, '/tracking_pkg/person_array', self.tracking_callback, 10)
-        #self.create_subscription(Image, '/depth/rect_metric', self.depth_callback, 10)
-        #self.create_subscription(PoseStamped, '/stella_slam/camera_pose', self.pose_callback, 10)
-        
-        self.fake_person_relative = np.array([2.0, 0.5, 0.0]) 
-        self.get_logger().info(f"MODALITÀ TEST: Simulo persona a {self.fake_person_relative} (Relativo)")
+        self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.info_callback, 10)
+        self.create_subscription(PersonTrackerArray, '/tracking/people', self.tracking_callback, 10)
+        self.create_subscription(PoseStamped, '/run_slam/camera_pose', self.pose_callback, 10)
+    
 
-        self.create_subscription(Odometry, '/odom', self.test_callback, 10) #for test
-
-        self.get_logger().info("Controller Node Started. Waiting for data...")
-
-    def test_callback(self, msg):
-        """
-        Questa funzione sostituisce tutto il calcolo della visione.
-        Prende la posizione del robot da Gazebo e calcola dove si trova la persona finta nel mondo.
-        """
-        # 1. Estrai Posa Robot (World Frame) da Odometry
-        # Nota: In /odom la posa è annidata dentro msg.pose.pose
-        pos = msg.pose.pose.position
-        orient = msg.pose.pose.orientation
-
-        robot_pos_world = np.array([pos.x, pos.y, pos.z])
-        
-        # 2. Converti Quaternione (Orientamento) in Matrice di Rotazione
-        r = R.from_quat([orient.x, orient.y, orient.z, orient.w])
-        rotation_matrix = r.as_matrix()
-
-        # 3. MATEMATICA DI TRASFORMAZIONE (Il cuore del tuo controller)
-        # Formula: P_world = (Rotazione_Robot * P_relative) + Posizione_Robot
-        
-        # A. Ruota il punto relativo: Se il robot gira, il punto "davanti" a lui cambia direzione nel mondo
-        person_rotated = np.dot(rotation_matrix, self.fake_person_relative)
-        
-        # B. Trasla: Aggiungi la posizione attuale del robot nella mappa
-        person_world_pos = person_rotated + robot_pos_world
-
-        # 4. CALCOLO DISTANZA (Verifica)
-        # La distanza euclidea 2D. Se la persona è fissa relativamente, questa distanza dovrebbe essere costante (~2.06m)
-        distance = np.linalg.norm(person_world_pos[:2] - robot_pos_world[:2])
-
-        # --- LOG DI VERIFICA ---
-        # Yaw (Rotazione sull'asse Z) in gradi per capire meglio come è girato il robot
-        yaw_deg = r.as_euler('xyz', degrees=True)[2]
-
-        print(f"--- TEST MATEMATICA ---")
-        print(f"Robot (World):  X={robot_pos_world[0]:.2f}, Y={robot_pos_world[1]:.2f}, Angolo={yaw_deg:.1f}°")
-        print(f"Persona (World): X={person_world_pos[0]:.2f}, Y={person_world_pos[1]:.2f}")
-        print(f"Distanza Calcolata: {distance:.2f}m")
-        print("-----------------------")
-
-    '''
     def info_callback(self, msg):
         """ Reads the camera's intrinsic matrix (fx, fy, cx, cy) """
         if self.camera_intrinsics is None:
@@ -125,7 +78,28 @@ class ControllerNode(Node):
             return
 
         # 3. Get the Z depth at that pixel
-        z_depth = self.latest_depth_img[v, u] 
+        
+        # Define the radius (5x5 means radius 2: center + 2 on each side)
+        r = 2
+        img_h, img_w = self.latest_depth_img.shape
+
+        # Calculate safe bounds (to avoid going out of image boundaries and crashing)
+        v_min = max(0, v - r)
+        v_max = min(img_h, v + r + 1)
+        u_min = max(0, u - r)
+        u_max = min(img_w, u + r + 1)
+
+        # Extract the small square (ROI - Region of Interest)
+        roi = self.latest_depth_img[v_min:v_max, u_min:u_max]
+
+        # Filter only valid pixels (greater than 0)
+        valid_pixels = roi[roi > 0]
+
+        # 5. Calculate the median
+        if len(valid_pixels) > 0:
+            z_depth = float(np.median(valid_pixels))
+        else:
+            z_depth = 0.0   
 
         if z_depth <= 0 or np.isnan(z_depth):
             self.get_logger().warn("Invalid depth for target.")
@@ -165,7 +139,7 @@ class ControllerNode(Node):
         )
         
         self.publish_goal(person_global_pos)
-    '''
+
 def main(args=None):
     rclpy.init(args=args)
     node = ControllerNode()
