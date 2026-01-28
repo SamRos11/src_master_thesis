@@ -9,15 +9,18 @@ def generate_launch_description():
     pkg_name = 'robot_launcher'
     pkg_share = get_package_share_directory(pkg_name)
     
-    sensors_launch = os.path.join(pkg_share, 'launch', 'camera.launch.py')
+    camera_launch = os.path.join(pkg_share, 'launch', 'camera.launch.py')
     
     config_file = os.path.join(pkg_share, 'config', 'stella_config.yaml')
     vocab_file = os.path.join(pkg_share, 'config', 'orb_vocab.fbow')
 
+    start_camera = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(camera_launch)
+    )
+
     return LaunchDescription([
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(sensors_launch)
-        ),
+        
+        #start_camera,
 
         # Stella launch
         Node(

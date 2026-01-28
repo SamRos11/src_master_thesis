@@ -5,20 +5,20 @@ Camera:
   model: "perspective"
   
   # I parametri focali scalano con la risoluzione
-  fx: 322.0   # Dimezzato (era 644)
-  fy: 322.0   # Dimezzato (era 644)
-  cx: 320.0   # Centro di 640
-  cy: 240.0   # Centro di 480
-  
+  fx: 920.6
+  fy: 919.0
+  cx: 640.0
+  cy: 360.0
+
   k1: 0.0
   k2: 0.0
   p1: 0.0
   p2: 0.0
   k3: 0.0
-  
-  fps: 15.0    # Importante: deve coincidere con la camera!
-  cols: 640    # Risoluzione VGA
-  rows: 480    # Risoluzione VGA
+
+  fps: 30.0
+  cols: 1280  
+  rows: 720
   
   color_order: "RGB" # Se i colori sono invertiti, cambia in "BGR" qui
 

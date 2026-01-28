@@ -2,30 +2,40 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CameraInfo
 from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 from tracking_msgs.msg import PersonTrackerArray 
 from cv_bridge import CvBridge
 from nav_msgs.msg import Odometry
 import numpy as np
 import message_filters
 from scipy.spatial.transform import Rotation as R
+from rclpy.qos import qos_profile_sensor_data
 
 class ControllerNode(Node):
     def __init__(self):
         super().__init__('controller_node')
-
-        # variables
+        
+        # Variables
         self.target_id = 1  # ID of the tracked person
         self.camera_intrinsics = None # matrix K
         self.latest_depth_img = None
         self.latest_robot_pose = None
         
         self.bridge = CvBridge()
+        self.target_was_lost = False
 
         ## SUBSCRIBERS
         self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.info_callback, 10)
         self.create_subscription(PersonTrackerArray, '/tracking/people', self.tracking_callback, 10)
-        self.create_subscription(PoseStamped, '/run_slam/camera_pose', self.pose_callback, 10)
-    
+        self.create_subscription(Odometry, '/run_slam/camera_pose', self.pose_callback, qos_profile_sensor_data)
+        self.create_subscription(
+            Image, 
+            '/camera/camera/aligned_depth_to_color/image_raw', 
+            self.depth_callback, 
+            qos_profile_sensor_data
+        )
+
+        self.goal_publisher = self.create_publisher(PoseStamped, '/goal_pose', 10)
 
     def info_callback(self, msg):
         """ Reads the camera's intrinsic matrix (fx, fy, cx, cy) """
@@ -46,29 +56,61 @@ class ControllerNode(Node):
 
     def pose_callback(self, msg):
         """ Save the robot's last known position from Stella VSLAM """
-        self.latest_robot_pose = msg.pose
+        self.latest_robot_pose = msg.pose.pose 
+        
+        #self.get_logger().info(f"Pose ricevuta! X: {self.latest_robot_pose.position.x:.2f}")
+
+    def publish_goal(self, position):
+        msg = PoseStamped()
+        
+        # Header obbligatorio
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "map"  # Le coordinate sono globali (riferite alla mappa)
+
+        # Posizione calcolata
+        msg.pose.position.x = position[0]
+        msg.pose.position.y = position[1]
+        msg.pose.position.z = 0.0  # Nav2 lavora in 2D, Z solitamente è 0
+
+        # Orientamento (Opzionale: guarda verso l'obiettivo)
+        # Per ora mettiamo orientamento neutro (w=1.0)
+        msg.pose.orientation.w = 1.0
+
+        # Pubblica sul topic '/goal_pose'
+        self.goal_publisher.publish(msg)
 
     def tracking_callback(self, msg):
         """ 
         This is the main function. It's called when the tracker sees someone.
         This is where the data fusion takes place.
         """
-        if self.latest_depth_img is None or self.latest_robot_pose is None or self.camera_intrinsics is None:
-            self.get_logger().warn("Waiting for Depth, Robot Pose, or Calibration...")
+        if self.latest_depth_img is None:
+            self.get_logger().warn("Waiting for Depth image...", throttle_duration_sec=2.0)
             return
-
-        # 1. Search for the person with the target ID
+        
+        if self.latest_robot_pose is None:
+            self.get_logger().warn("Waiting for Robot Pose (SLAM)...", throttle_duration_sec=2.0)
+            return
+            
+        if self.camera_intrinsics is None:
+            self.get_logger().warn("Waiting for Camera Calibration...", throttle_duration_sec=2.0)
+            return
+        
+        # Search for the person with the target ID
         target_person = None
+        
         for person in msg.people:
-            if person.id == self.target_id:
+            if person.is_target: 
                 target_person = person
                 break
         
         if target_person is None:
-            self.get_logger().info(f"Target ID {self.target_id} not found.")
+            if not self.target_was_lost:
+                self.get_logger().info(f"Target ID {self.target_id} not found.")
+                self.target_was_lost = True
             return
 
-        # 2. Extract pixel coordinates (u,v) from tracking message
+        # Extract pixel coordinates (u,v) from tracking message
         u = int(target_person.x_center)
         v = int(target_person.y_center)
 
@@ -77,7 +119,7 @@ class ControllerNode(Node):
         if u >= w_img or v >= h_img or u < 0 or v < 0:
             return
 
-        # 3. Get the Z depth at that pixel
+        # Get the Z depth at that pixel
         
         # Define the radius (5x5 means radius 2: center + 2 on each side)
         r = 2
@@ -95,26 +137,25 @@ class ControllerNode(Node):
         # Filter only valid pixels (greater than 0)
         valid_pixels = roi[roi > 0]
 
-        # 5. Calculate the median
+        # Calculate the median
         if len(valid_pixels) > 0:
-            z_depth = float(np.median(valid_pixels))
+            z_depth = float(np.median(valid_pixels)) / 1000
         else:
+            self.get_logger().warn("Invalid depth.", throttle_duration_sec=1.0)
             z_depth = 0.0   
+            return
 
         if z_depth <= 0 or np.isnan(z_depth):
             self.get_logger().warn("Invalid depth for target.")
             return
 
-        # 4. CALCULATE POSITION RELATIVE TO THE CAMERA (X_cam, Y_cam, Z_cam)
+        # CALCULATE POSITION RELATIVE TO THE CAMERA (X_cam, Y_cam, Z_cam)
         # Pinhole Camera Formulas
         x_cam = (u - self.cx) * z_depth / self.fx
         y_cam = (v - self.cy) * z_depth / self.fy
         z_cam = z_depth 
 
-        # Person position vector relative to the camera
-        person_in_camera_frame = np.array([x_cam, y_cam, z_cam])
-
-        # 5. GLOBAL POSITION CALCULATION (Map)
+        # GLOBAL POSITION CALCULATION (Map)
         # Transform the robot's pose (quaternion) into a rotation matrix
         q = self.latest_robot_pose.orientation
         rot_matrix = R.from_quat([q.x, q.y, q.z, q.w]).as_matrix()
@@ -123,11 +164,14 @@ class ControllerNode(Node):
         robot_pos = np.array([self.latest_robot_pose.position.x, 
                               self.latest_robot_pose.position.y, 
                               self.latest_robot_pose.position.z])
+        
+        # Person position vector relative to the camera
+        person_in_camera_frame = np.array([z_cam, -x_cam, -y_cam])
 
         # Final transformation: P_world = R * P_cam + T_robot
         person_global_pos = np.dot(rot_matrix, person_in_camera_frame) + robot_pos
 
-        # 6. ERROR CALCULATION (Robot - Person Distance)
+        # ERROR CALCULATION (Robot - Person Distance)
         distance_error = np.linalg.norm(person_global_pos[:2] - robot_pos[:2])
 
         self.get_logger().info(
@@ -137,8 +181,9 @@ class ControllerNode(Node):
             f"Person (World): {person_global_pos}\n"
             f"Distance (Errore): {distance_error:.2f} meter"
         )
-        
+
         self.publish_goal(person_global_pos)
+        
 
 def main(args=None):
     rclpy.init(args=args)
