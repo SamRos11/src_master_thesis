@@ -99,6 +99,12 @@ sudo apt install -y libatlas-base-dev libsuitesparse-dev gfortran
 # OpenCV System Dependencies
 sudo apt install -y libgtk-3-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libtbb-dev
 
+# ROS2 laser scan 
+sudo apt install ros-humble-depthimage-to-laserscan
+
+# Nav2
+sudo apt install ros-humble-navigation2 ros-humble-nav2-bringup ros-humble-turtlebot3-gazebo
+
 # Other Utils
 sudo apt install -y binutils-dev libyaml-cpp-dev libgflags-dev sqlite3 libsqlite3-dev libglew-dev
 
@@ -309,3 +315,4 @@ Run the following command:
 # Install YOLO, DeepSORT, and ensure compatibility with ROS 2
 pip3 install ultralytics deep-sort-realtime "numpy<2.0" "opencv-python<4.11"
 ```
+# Algorithm launch

@@ -18,12 +18,19 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(camera_launch)
     )
 
-    return LaunchDescription([
-        
-        #start_camera,
+    tf_odom_base = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments = ['0', '0', '0', '0', '0', '0', 'odom', 'base_link']
+    )
 
-        # Stella launch
-        Node(
+    tf_base_camera = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments = ['0.2', '0', '0.4', '0', '0', '0', 'base_link', 'camera_link']
+    )
+
+    slam_node = Node(
             package='stella_vslam_ros',
             executable='run_slam',
             name='run_slam',
@@ -34,13 +41,10 @@ def generate_launch_description():
             ('/camera/depth/image_raw', '/camera/camera/aligned_depth_to_color/image_raw'),
             ('/camera/camera_info', '/camera/camera/color/camera_info'), 
         ],
-        ),
-        
-        # Static TF
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            arguments=['0', '0', '0', '0', '0', '0', '1', 'odom', 'camera_link'],
-            output='screen'
-        )
+    )
+
+    return LaunchDescription([
+        tf_odom_base,
+        tf_base_camera,
+        slam_node
     ])

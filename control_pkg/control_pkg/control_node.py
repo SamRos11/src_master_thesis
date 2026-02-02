@@ -10,6 +10,7 @@ import numpy as np
 import message_filters
 from scipy.spatial.transform import Rotation as R
 from rclpy.qos import qos_profile_sensor_data
+import math
 
 class ControllerNode(Node):
     def __init__(self):
@@ -60,23 +61,31 @@ class ControllerNode(Node):
         
         #self.get_logger().info(f"Pose ricevuta! X: {self.latest_robot_pose.position.x:.2f}")
 
-    def publish_goal(self, position):
+    def publish_goal(self, target_pos, robot_pos):
         msg = PoseStamped()
         
         # Header obbligatorio
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "map"  # Le coordinate sono globali (riferite alla mappa)
 
-        # Posizione calcolata
-        msg.pose.position.x = position[0]
-        msg.pose.position.y = position[1]
-        msg.pose.position.z = 0.0  # Nav2 lavora in 2D, Z solitamente è 0
+        # Calculated position
+        msg.pose.position.x = target_pos[0]
+        msg.pose.position.y = target_pos[1]
+        msg.pose.position.z = 0.0  # Nav2 works in 2D
 
-        # Orientamento (Opzionale: guarda verso l'obiettivo)
-        # Per ora mettiamo orientamento neutro (w=1.0)
-        msg.pose.orientation.w = 1.0
+        dx = target_pos[0] - robot_pos[0]
+        dy = target_pos[1] - robot_pos[1]   
+        
+        # Calculate the angle in radians (Yaw)
+        yaw = math.atan2(dy, dx)
+        
+        # Convert Yaw to Quaternion (Z-axis only)
+        msg.pose.orientation.x = 0.0
+        msg.pose.orientation.y = 0.0
+        msg.pose.orientation.z = math.sin(yaw / 2.0)
+        msg.pose.orientation.w = math.cos(yaw / 2.0)
 
-        # Pubblica sul topic '/goal_pose'
+        # Post to topic '/goal_pose'
         self.goal_publisher.publish(msg)
 
     def tracking_callback(self, msg):
@@ -182,7 +191,7 @@ class ControllerNode(Node):
             f"Distance (Errore): {distance_error:.2f} meter"
         )
 
-        self.publish_goal(person_global_pos)
+        self.publish_goal(person_global_pos[:2], robot_pos[:2])
         
 
 def main(args=None):
