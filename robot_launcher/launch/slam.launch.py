@@ -46,5 +46,6 @@ def generate_launch_description():
     return LaunchDescription([
         tf_odom_base,
         tf_base_camera,
-        slam_node
+        slam_node,
+        #start_camera
     ])

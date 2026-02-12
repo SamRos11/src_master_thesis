@@ -21,6 +21,9 @@ class ControllerNode(Node):
         self.camera_intrinsics = None # matrix K
         self.latest_depth_img = None
         self.latest_robot_pose = None
+        self.last_goal = [0.0, 0.0]
+        self.MIN_MOVE_THRESHOLD = 0.30
+        self.SAFE_DISTANCE = 0.5
         
         self.bridge = CvBridge()
         self.target_was_lost = False
@@ -66,11 +69,11 @@ class ControllerNode(Node):
         
         # Header obbligatorio
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "map"  # Le coordinate sono globali (riferite alla mappa)
+        msg.header.frame_id = "base_link"  # Le coordinate sono globali (riferite alla mappa)
 
         # Calculated position
-        msg.pose.position.x = target_pos[0]
-        msg.pose.position.y = target_pos[1]
+        msg.pose.position.x = float(target_pos[0])
+        msg.pose.position.y = float(target_pos[1])
         msg.pose.position.z = 0.0  # Nav2 works in 2D
 
         dx = target_pos[0] - robot_pos[0]
@@ -167,12 +170,19 @@ class ControllerNode(Node):
         # GLOBAL POSITION CALCULATION (Map)
         # Transform the robot's pose (quaternion) into a rotation matrix
         q = self.latest_robot_pose.orientation
-        rot_matrix = R.from_quat([q.x, q.y, q.z, q.w]).as_matrix()
-        
+
+        #rot_matrix = R.from_quat([q.x, q.y, q.z, q.w]).as_matrix()
+        #only for temponary test
+        rot_matrix = R.from_quat([0.0, 0.0, 0.0, 1.0]).as_matrix()
+
         # Robot position (translation)
-        robot_pos = np.array([self.latest_robot_pose.position.x, 
-                              self.latest_robot_pose.position.y, 
-                              self.latest_robot_pose.position.z])
+        #robot_pos = np.array([self.latest_robot_pose.position.x, 
+        #                      self.latest_robot_pose.position.y, 
+        #                      self.latest_robot_pose.position.z])
+        #only for temponary test
+        robot_pos = np.array([0, 
+                              0, 
+                              0])
         
         # Person position vector relative to the camera
         person_in_camera_frame = np.array([z_cam, -x_cam, -y_cam])
@@ -180,8 +190,25 @@ class ControllerNode(Node):
         # Final transformation: P_world = R * P_cam + T_robot
         person_global_pos = np.dot(rot_matrix, person_in_camera_frame) + robot_pos
 
+        # Handle the very first iteration where 'last_goal' might not exist yet
+        if not hasattr(self, 'last_goal') or self.last_goal is None:
+             self.last_goal = person_global_pos
+
         # ERROR CALCULATION (Robot - Person Distance)
         distance_error = np.linalg.norm(person_global_pos[:2] - robot_pos[:2])
+
+        
+
+        if distance_error > self.SAFE_DISTANCE:
+            # Calculate the unit vector pointing from Robot -> Person
+            direction_vector = (person_global_pos[:2] - robot_pos[:2]) / distance_error
+            
+            # The actual goal is: Person Position minus the Safety Buffer along that vector
+            # This ensures the goal is in front of the person, not inside them.
+            safe_goal_pos = person_global_pos[:2] - (direction_vector * self.SAFE_DISTANCE)
+        else:
+            # If the person is too close (inside the buffer), stay put (Goal = Current Pos)
+            safe_goal_pos = robot_pos[:2]
 
         self.get_logger().info(
             f"\nComputations:\n"
@@ -191,7 +218,27 @@ class ControllerNode(Node):
             f"Distance (Errore): {distance_error:.2f} meter"
         )
 
-        self.publish_goal(person_global_pos[:2], robot_pos[:2])
+        dx = person_global_pos[0] - self.last_goal[0] 
+        dy = person_global_pos[1] - self.last_goal[1]
+        movement_delta = math.sqrt(dx**2 + dy**2)
+
+        if movement_delta < self.MIN_MOVE_THRESHOLD:
+            # If the movement is below the threshold (e.g., 0.30m), it's considered noise.
+            # We RETURN here to avoid spamming the planner with identical goals.
+            self.get_logger().info(f"Movement too small ({movement_delta:.2f}m). Skipping update.")
+            return 
+        else:
+            # If valid movement is detected, publish the NEW SAFE GOAL.
+            # We pass 'safe_goal_pos' to the navigator, not the raw person position.
+            self.publish_goal(safe_goal_pos, robot_pos[:2])
+            
+            # Update the 'last_goal' memory with the CURRENT detected person position
+            # so we can calculate the delta correctly in the next loop.
+            self.last_goal = person_global_pos 
+            self.get_logger().info(f"New Goal published! Delta: {movement_delta:.2f}m")
+
+
+        
         
 
 def main(args=None):
