@@ -23,9 +23,9 @@ Camera:
   color_order: "RGB" # Se i colori sono invertiti, cambia in "BGR" qui
 
 Feature:
-  max_num_keypoints: 2000
+  max_num_keypoints: 1000
   scale_factor: 1.2
-  num_levels: 8
+  num_levels: 6
   ini_fast_threshold: 20
   min_fast_threshold: 7
 

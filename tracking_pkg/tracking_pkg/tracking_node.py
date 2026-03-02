@@ -31,8 +31,11 @@ class TrackingNode(Node):
 
         self.get_logger().info("YOLO + DeepSORT tracking node started.")
 
-        # Caricamento YOLO
-        self.model = YOLO("yolo11s-pose.pt")
+        # Upload of YOLO's model
+        self.model = YOLO("yolo11n-pose.pt")
+
+        # Use of GPU
+        self.model.to('cuda')
 
         self.locked_target_id = None
 
@@ -42,7 +45,8 @@ class TrackingNode(Node):
             max_age=120,
             n_init=3,
             max_cosine_distance=0.6,
-            nn_budget=30
+            nn_budget=30,
+            embedder_gpu=True # Use of GPU
         )
 
     def detect_gesture(self, kpts):
@@ -83,7 +87,7 @@ class TrackingNode(Node):
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
 
         # YOLO detection
-        results = self.model(frame, verbose=False, classes=[0], conf=0.7)[0]
+        results = self.model(frame, verbose=False, classes=[0], conf=0.7, device ='cuda:0', imgsz=480, half=True)[0]
 
         detections = []
 

@@ -315,4 +315,47 @@ Run the following command:
 # Install YOLO, DeepSORT, and ensure compatibility with ROS 2
 pip3 install ultralytics deep-sort-realtime "numpy<2.0" "opencv-python<4.11"
 ```
+
+### Cuda not found
+If cuda is not found, probably ultralitics overwrote the right Pytorch verison. To solve this:
+```bash
+# Enter in the virtual envirorment
+source ~/samros/ros2_env/bin/activate
+
+sudo chown -R $USER:$USER ~/samros/ros2_env
+
+# Uninstall anything that causes conflicts
+pip uninstall ultralytics torch torchvision torchaudio -y
+pip uninstall ultralytics torch torchvision torchaudio -y
+
+
+rm -rf ~/.local/lib/python3.10/site-packages/torch*
+rm -rf ~/.local/lib/python3.10/site-packages/vision*
+```
+
+```bash
+cd ~/Downloads
+
+# Download PyTorch 2.5.0 for JetPack 6.1 / cuDNN 9 (NVIDIA Official)
+wget https://developer.download.nvidia.com/compute/redist/jp/v61/pytorch/torch-2.5.0a0+872d972e41.nv24.08.17622132-cp310-cp310-linux_aarch64.whl
+
+# Install PyTorch
+pip install torch-2.5.0a0+872d972e41.nv24.08.17622132-cp310-cp310-linux_aarch64.whl
+
+# Download Torchvision 0.20 (Compiled by Ultralytics for Jetson)
+wget https://github.com/ultralytics/assets/releases/download/v0.0.0/torchvision-0.20.0a0+afc54f7-cp310-cp310-linux_aarch64.whl
+
+# Install Torchvision
+pip install torchvision-0.20.0a0+afc54f7-cp310-cp310-linux_aarch64.whl
+```
+
+```bash
+# Install other harmless YOLO dependencies
+pip install matplotlib pyyaml tqdm scipy
+pip install opencv-python Pillow py-cpuinfo psutil
+
+# Install Ultralytics before it can download PyTorch for CPU
+pip install --no-deps ultralytics
+```
+
 # Algorithm launch

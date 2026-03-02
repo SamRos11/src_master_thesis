@@ -21,7 +21,7 @@ setup(
         
         # --- PARTE CRUCIALE PER I CONFIG ---
         # Copia tutti i file da 'config/' a 'share/robot_launcher/config/'
-        (os.path.join('share', package_name, 'config'), glob('config/*')),
+        (os.path.join('share', package_name, 'config'), glob('config/*.*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
