@@ -125,6 +125,11 @@ class ControllerNode(Node):
         # Extract pixel coordinates (u,v) from tracking message
         u = int(target_person.x_center)
         v = int(target_person.y_center)
+        h = int(target_person.h)
+
+        v_offset = int(v + (h * 0.25))
+        
+        v = v_offset
 
         # Image boundary check (to avoid crashing if u,v are out of bounds)
         h_img, w_img = self.latest_depth_img.shape
@@ -136,6 +141,7 @@ class ControllerNode(Node):
         # Define the radius (5x5 means radius 2: center + 2 on each side)
         r = 2
         img_h, img_w = self.latest_depth_img.shape
+
 
         # Calculate safe bounds (to avoid going out of image boundaries and crashing)
         v_min = max(0, v - r)

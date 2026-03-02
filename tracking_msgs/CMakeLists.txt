@@ -1,13 +1,23 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.0.2)
 project(tracking_msgs)
 
-find_package(ament_cmake REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/PersonTracker.msg"
-  "msg/PersonTrackerArray.msg"
+find_package(catkin REQUIRED COMPONENTS
+  message_generation
+  std_msgs
 )
 
-ament_export_dependencies(rosidl_default_runtime)
-ament_package()
+add_message_files(
+  FILES
+  PersonTracker.msg
+  PersonTrackerArray.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+
+
+catkin_package(
+  CATKIN_DEPENDS message_runtime std_msgs
+)
