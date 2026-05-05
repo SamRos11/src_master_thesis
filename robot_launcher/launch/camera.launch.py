@@ -17,7 +17,7 @@ def generate_launch_description():
                 'enable_accel': True,
                 'enable_infra1': False,
                 'enable_infra2': False,
-                'unite_imu_method': 0,
+                'unite_imu_method': 2,
                 'enable_sync': True,
                 'align_depth.enable': True,
                 'initial_reset': True

@@ -31,7 +31,7 @@ class ControllerNode(Node):
         ## SUBSCRIBERS
         self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.info_callback, 10)
         self.create_subscription(PersonTrackerArray, '/tracking/people', self.tracking_callback, 10)
-        self.create_subscription(Odometry, '/run_slam/camera_pose', self.pose_callback, qos_profile_sensor_data)
+        self.create_subscription(Odometry, '/odometry/filtered', self.pose_callback, qos_profile_sensor_data)
         self.create_subscription(
             Image, 
             '/camera/camera/aligned_depth_to_color/image_raw', 
@@ -74,7 +74,7 @@ class ControllerNode(Node):
         # Calculated position
         msg.pose.position.x = float(target_pos[0])
         msg.pose.position.y = float(target_pos[1])
-        msg.pose.position.z = 0.0  # Nav2 works in 2D
+        msg.pose.position.z = 0.0
 
         dx = target_pos[0] - robot_pos[0]
         dy = target_pos[1] - robot_pos[1]   
@@ -176,13 +176,13 @@ class ControllerNode(Node):
         rot_matrix = R.from_quat([0.0, 0.0, 0.0, 1.0]).as_matrix()
 
         # Robot position (translation)
-        #robot_pos = np.array([self.latest_robot_pose.position.x, 
-        #                      self.latest_robot_pose.position.y, 
-        #                      self.latest_robot_pose.position.z])
+        robot_pos = np.array([self.latest_robot_pose.position.x, 
+                              self.latest_robot_pose.position.y, 
+                              self.latest_robot_pose.position.z])
         #only for temponary test
-        robot_pos = np.array([0, 
-                              0, 
-                              0])
+        #robot_pos = np.array([0, 
+        #                      0, 
+        #                      0])
         
         # Person position vector relative to the camera
         person_in_camera_frame = np.array([z_cam, -x_cam, -y_cam])

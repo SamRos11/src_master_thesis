@@ -1,0 +1,29 @@
+ekf_filter_node:
+  ros__parameters:
+    frequency: 30.0
+    sensor_timeout: 0.1
+    two_d_mode: true  # We are a car on a flat surface, ignore Z axis
+    publish_tf: true
+    
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: camera_frame
+    world_frame: odom
+
+    # --- SENSOR 1: SLAM ODOMETRY ---
+    odom0: /odom_kinematic  # Put the topic name of your OpenVSLAM here
+    odom0_config: [true,  true,  false, # Trust X, Y
+                   false, false, true,  # Trust Yaw
+                   false, false, false,
+                   false, false, false,
+                   false, false, false]
+    # We tell the filter: "Trust SLAM only for absolute position"
+
+    # --- SENSOR 2: REALSENSE IMU ---
+    imu0: /camera/imu # Put your IMU topic name here
+    imu0_config: [false, false, false,
+                  false, false, false,
+                  false, false, false,
+                  false, false, true,  # Trust Yaw Velocity (Gyroscope)
+                  false,  false,  false]
+    imu0_differential: false

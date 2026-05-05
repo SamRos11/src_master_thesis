@@ -12,6 +12,11 @@ def generate_launch_description():
     control_launch = os.path.join(pkg_share, 'launch', 'control.launch.py')
     nav2_params_file = os.path.join(pkg_share, 'config', 'nav2_params.yaml')
     rviz_config_file = os.path.join(pkg_share, 'config', 'robot.launch_test.rviz')
+    ekf_config_path = os.path.join(
+        get_package_share_directory('robot_launcher'),
+        'config',
+        'ekf.yaml'
+    )
 
     start_control = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(control_launch)
@@ -53,9 +58,35 @@ def generate_launch_description():
         output='screen'
     )
 
+    ekf_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter_node',
+        output='screen',
+        parameters=[ekf_config_path]
+    )
+
+    kinematic_odom = Node(
+        package='control_pkg',
+        executable='kinematic_odom',
+        name='kinematic_odom',
+        output='screen',
+        parameters=[ekf_config_path]
+    )
+
+    motor_node = Node(
+        package='control_pkg',
+        executable='motor_driver',
+        name='motor_driver',
+        output='screen'
+    )
+
     return LaunchDescription([
         start_control,
         start_laser,
+        kinematic_odom,
+        ekf_node,
         nav2_launch,
         rviz_node,
+        #motor_node
     ])
