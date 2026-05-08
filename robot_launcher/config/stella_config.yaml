@@ -1,14 +1,13 @@
-# Configurazione per RealSense D435i (Adattata a 640x480 @ 15FPS)
 Camera:
   name: "RealSense D435i"
   setup: "RGBD"
   model: "perspective"
   
-  # I parametri focali scalano con la risoluzione
-  fx: 920.6
-  fy: 919.0
-  cx: 640.0
-  cy: 360.0
+  # Intrinsic matrix values extracted from /camera_info
+  fx: 613.7
+  fy: 612.7
+  cx: 315.2
+  cy: 241.3
 
   k1: 0.0
   k2: 0.0
@@ -17,10 +16,10 @@ Camera:
   k3: 0.0
 
   fps: 30.0
-  cols: 1280  
-  rows: 720
+  cols: 640
+  rows: 480
   
-  color_order: "RGB" # Se i colori sono invertiti, cambia in "BGR" qui
+  color_order: "RGB"
 
 Feature:
   max_num_keypoints: 1000

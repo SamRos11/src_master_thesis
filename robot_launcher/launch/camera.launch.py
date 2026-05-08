@@ -10,9 +10,12 @@ def generate_launch_description():
             name='camera',
             namespace='camera',
             parameters=[{
-                'rgb_camera.profile': '1280x720x30',  
+                # The correct parameter names for recent ROS 2 versions
+                'rgb_camera.color_profile': '640x480x30',  
                 'rgb_camera.color_format': 'bgr8',   
-                'depth_module.profile': '1280x720x30',
+                'depth_module.depth_profile': '640x480x30', 
+                
+                # IMU and Sync settings
                 'enable_gyro': True,
                 'enable_accel': True,
                 'enable_infra1': False,
@@ -20,7 +23,7 @@ def generate_launch_description():
                 'unite_imu_method': 2,
                 'enable_sync': True,
                 'align_depth.enable': True,
-                'initial_reset': True
+                'initial_reset': False
             }],
             output='screen'
         )

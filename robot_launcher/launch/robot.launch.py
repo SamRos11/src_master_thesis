@@ -15,7 +15,12 @@ def generate_launch_description():
     ekf_config_path = os.path.join(
         get_package_share_directory('robot_launcher'),
         'config',
-        'ekf.yaml'
+        'ekf_local.yaml'
+    )
+    ekf_global_config_path = os.path.join(
+        get_package_share_directory('robot_launcher'),
+        'config',
+        'ekf_global.yaml'
     )
 
     start_control = IncludeLaunchDescription(
@@ -66,6 +71,23 @@ def generate_launch_description():
         parameters=[ekf_config_path]
     )
 
+    ekf_global_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_global_node',
+        output='screen',
+        parameters=[ekf_global_config_path],
+        remappings=[
+            ('odometry/filtered', 'odometry/global') # Cambiamo nome al topic per non confonderlo con quello locale
+        ]
+    )
+
+    pose_converter_node = Node(
+    package='control_pkg',
+    executable='pose_converter',
+    name='pose_converter_node'
+)
+
     kinematic_odom = Node(
         package='control_pkg',
         executable='kinematic_odom',
@@ -86,7 +108,9 @@ def generate_launch_description():
         start_laser,
         kinematic_odom,
         ekf_node,
+        ekf_global_node,
+        pose_converter_node,
         nav2_launch,
         rviz_node,
-        #motor_node
+        motor_node
     ])

@@ -23,7 +23,7 @@ class ControllerNode(Node):
         self.latest_robot_pose = None
         self.last_goal = [0.0, 0.0]
         self.MIN_MOVE_THRESHOLD = 0.30
-        self.SAFE_DISTANCE = 0.5
+        self.SAFE_DISTANCE = 1.0
         
         self.bridge = CvBridge()
         self.target_was_lost = False
@@ -31,7 +31,7 @@ class ControllerNode(Node):
         ## SUBSCRIBERS
         self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.info_callback, 10)
         self.create_subscription(PersonTrackerArray, '/tracking/people', self.tracking_callback, 10)
-        self.create_subscription(Odometry, '/odometry/filtered', self.pose_callback, qos_profile_sensor_data)
+        self.create_subscription(Odometry, '/odometry/global', self.pose_callback, qos_profile_sensor_data) # Im listening at the global position corrected bt the kalman 
         self.create_subscription(
             Image, 
             '/camera/camera/aligned_depth_to_color/image_raw', 
@@ -69,7 +69,7 @@ class ControllerNode(Node):
         
         # Header obbligatorio
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "base_link"  # Le coordinate sono globali (riferite alla mappa)
+        msg.header.frame_id = "map"  # Le coordinate sono globali (riferite alla mappa)
 
         # Calculated position
         msg.pose.position.x = float(target_pos[0])
@@ -171,9 +171,9 @@ class ControllerNode(Node):
         # Transform the robot's pose (quaternion) into a rotation matrix
         q = self.latest_robot_pose.orientation
 
-        #rot_matrix = R.from_quat([q.x, q.y, q.z, q.w]).as_matrix()
+        rot_matrix = R.from_quat([q.x, q.y, q.z, q.w]).as_matrix()
         #only for temponary test
-        rot_matrix = R.from_quat([0.0, 0.0, 0.0, 1.0]).as_matrix()
+        #rot_matrix = R.from_quat([0.0, 0.0, 0.0, 1.0]).as_matrix()
 
         # Robot position (translation)
         robot_pos = np.array([self.latest_robot_pose.position.x, 

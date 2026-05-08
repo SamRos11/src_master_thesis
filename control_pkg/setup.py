@@ -27,6 +27,7 @@ setup(
             'control_node = control_pkg.control_node:main',
             'motor_driver = control_pkg.motor_driver:main',
             'kinematic_odom = control_pkg.kinematic_odom_node:main',
+            'pose_converter = control_pkg.pose_converter:main',
         ],
     },
 )

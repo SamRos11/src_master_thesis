@@ -1,0 +1,35 @@
+ekf_global_node:
+  ros__parameters:
+    frequency: 10.0       # Non serve che sia velocissimo, corregge solo la deriva a lungo termine
+    sensor_timeout: 0.2
+    two_d_mode: true
+    publish_tf: true      # Questo pubblicherà la trasformata map -> odom
+
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: map  
+
+    # SENSOR 1: Finti Encoder (Per sapere come si muove nel breve termine)
+    odom0: /odom_kinematic
+    odom0_config: [true,  true,  false,
+                   false, false, true,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false]
+
+    # SENSOR 2: Giroscopio (Per la rotazione fluida)
+    imu0: /camera/camera/imu
+    imu0_config: [false, false, false,
+                  false, false, false,
+                  false, false, false,
+                  false, false, true,
+                  false, false, false]
+
+    # SENSOR 3: STELLA VSLAM (La correzione globale)
+    pose0: /run_slam/camera_pose_cov
+    pose0_config: [true,  true,  false,  # Fidati di X, Y dallo SLAM
+                   false, false, false,   # Fidati dello Yaw dallo SLAM
+                   false, false, false,
+                   false, false, false,
+                   false, false, false]

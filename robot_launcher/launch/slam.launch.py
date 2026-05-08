@@ -18,12 +18,6 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(camera_launch)
     )
 
-    tf_odom_base = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments = ['0', '0', '0', '0', '0', '0', 'odom', 'base_link']
-    )
-
     tf_base_camera = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -36,6 +30,9 @@ def generate_launch_description():
             name='run_slam',
             arguments=['-v', vocab_file, '-c', config_file],
             output='screen',
+            parameters=[{
+                'publish_tf': False
+            }],
             remappings=[
             ('/camera/color/image_raw', '/camera/camera/color/image_raw'), 
             ('/camera/depth/image_raw', '/camera/camera/aligned_depth_to_color/image_raw'),
@@ -44,7 +41,6 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        tf_odom_base,
         tf_base_camera,
         slam_node,
         #start_camera
