@@ -23,9 +23,12 @@ def generate_launch_description():
         'ekf_global.yaml'
     )
 
+    car_control_dir = get_package_share_directory('car_control')
+
     start_control = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(control_launch)
     )
+
 
     start_laser = Node(
             package='depthimage_to_laserscan',
@@ -40,7 +43,7 @@ def generate_launch_description():
                 'output_frame': 'camera_link', 
                 'range_min': 0.3,              # Ignores things within 30cm (noise)
                 'range_max': 5.0,              # Ignore things over 5m
-                'scan_height': 50              # How many pixel rows to use (higher = sees obstacles of different heights)
+                'scan_height': 300              # How many pixel rows to use (higher = sees obstacles of different heights)
             }]
     )
     
@@ -52,6 +55,16 @@ def generate_launch_description():
             'use_sim_time': 'False',
             'params_file': nav2_params_file,
             'autostart': 'True',
+        }.items()
+    )
+
+    car_control_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(car_control_dir, 'launch', 'car_control_with_microros.launch.py')
+        ),
+        launch_arguments={
+            'serial_port': '/dev/ttyTHS1', # Assicurati che sia la porta giusta per la Jetson
+            'baud_rate': '115200'
         }.items()
     )
 
@@ -88,29 +101,31 @@ def generate_launch_description():
     name='pose_converter_node'
 )
 
-    kinematic_odom = Node(
+    real_odom = Node(
         package='control_pkg',
-        executable='kinematic_odom',
-        name='kinematic_odom',
+        executable='real_odom',
+        name='real_odom',
         output='screen',
         parameters=[ekf_config_path]
     )
 
-    motor_node = Node(
-        package='control_pkg',
-        executable='motor_driver',
-        name='motor_driver',
-        output='screen'
+    # Car Control Node
+    car_control_node = Node(
+        package='car_control',
+        executable='car_control_node',
+        output='screen',
+        name='car_control_node',
     )
 
     return LaunchDescription([
         start_control,
         start_laser,
-        kinematic_odom,
+        real_odom,
         ekf_node,
         ekf_global_node,
         pose_converter_node,
         nav2_launch,
-        rviz_node,
-        motor_node
+        #rviz_node,
+        #car_control_launch,
+        car_control_node,
     ])

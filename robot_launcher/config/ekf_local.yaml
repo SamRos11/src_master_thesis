@@ -10,8 +10,8 @@ ekf_filter_node:
     base_link_frame: base_link
     world_frame: odom
 
-    # SENSOR 1: Fake encoder 
-    odom0: /odom_kinematic 
+    # SENSOR 1: Encoder 
+    odom0: /odom
     odom0_config: [true,  true,  false, # Trust X, Y
                    false, false, true,  # Trust Yaw
                    false, false, false,

@@ -23,7 +23,7 @@ def generate_launch_description():
                 'unite_imu_method': 2,
                 'enable_sync': True,
                 'align_depth.enable': True,
-                'initial_reset': False
+                'initial_reset': True
             }],
             output='screen'
         )

@@ -21,8 +21,8 @@ class ControllerNode(Node):
         self.camera_intrinsics = None # matrix K
         self.latest_depth_img = None
         self.latest_robot_pose = None
-        self.last_goal = [0.0, 0.0]
-        self.MIN_MOVE_THRESHOLD = 0.30
+        self.last_goal = None
+        self.MIN_MOVE_THRESHOLD = 0.2
         self.SAFE_DISTANCE = 1.0
         
         self.bridge = CvBridge()
