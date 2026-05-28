@@ -21,14 +21,14 @@ def generate_launch_description():
     tf_base_camera = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        arguments = ['0.2', '0', '0.4', '0', '0', '0', 'base_link', 'camera_link']
+        arguments = ['0.0', '0', '0.2', '0', '0', '0', 'base_link', 'camera_link']
     )
 
     slam_node = Node(
             package='stella_vslam_ros',
             executable='run_slam',
             name='run_slam',
-            arguments=['-v', vocab_file, '-c', config_file],
+            arguments=['-v', vocab_file, '-c', config_file, '--viewer', 'none'],
             output='screen',
             parameters=[{
                 'publish_tf': False

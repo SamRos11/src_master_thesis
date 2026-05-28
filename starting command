@@ -1,3 +1,5 @@
 ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyTHS1 -b 115200
 
- ros2 launch robot_launcher robot.launch.py 
+ros2 launch robot_launcher robot.launch.py 
+
+rviz2 -d ~/samros/ros2_ws/nav_config.rviz

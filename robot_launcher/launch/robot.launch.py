@@ -30,6 +30,13 @@ def generate_launch_description():
     )
 
 
+    # Aggiungi questo nodo se non c'è già
+    static_transform_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom']
+    )
+
     start_laser = Node(
             package='depthimage_to_laserscan',
             executable='depthimage_to_laserscan_node',
@@ -41,8 +48,8 @@ def generate_launch_description():
             ],
             parameters=[{
                 'output_frame': 'camera_link', 
-                'range_min': 0.3,              # Ignores things within 30cm (noise)
-                'range_max': 5.0,              # Ignore things over 5m
+                'range_min': 0.2,              # Ignores things within 30cm (noise)
+                'range_max': 4.0,              # Ignore things over 5m
                 'scan_height': 300              # How many pixel rows to use (higher = sees obstacles of different heights)
             }]
     )
@@ -128,4 +135,5 @@ def generate_launch_description():
         #rviz_node,
         #car_control_launch,
         car_control_node,
+        static_transform_publisher
     ])

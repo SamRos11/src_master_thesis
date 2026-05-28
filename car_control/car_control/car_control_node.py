@@ -168,13 +168,12 @@ class CarControlNode(Node):
         self._last_cmd_vel_time = self.get_clock().now()
         self._cmd_vel_idle_active = False
 
-        # Clamp steering angle to valid range
+        # Clamp steering angle
         steering_angle = max(self.STEERING_MIN, min(self.STEERING_MAX, steering_angle))
 
         self.latest_ref_speed_mps = ref_speed_mps
         self.ref_speed_publisher.publish(Float64(data=ref_speed_mps))
         self._set_servo_angle(steering_angle)
-        self._log_state('cmd_vel')
 
     def _cmd_vel_watchdog_callback(self):
         """Hold ref_speed at 0 when /cmd_vel goes stale; centre steering only once."""
@@ -185,7 +184,9 @@ class CarControlNode(Node):
             self._cmd_vel_idle_active = False
             return
 
+        # Quando il robot va in timeout, azzera la memoria della velocità
         self.latest_ref_speed_mps = 0.0
+        self._last_published_speed = 0.0 
         self.ref_speed_publisher.publish(Float64(data=0.0))
 
         if not self._cmd_vel_idle_active:
@@ -243,7 +244,7 @@ class CarControlNode(Node):
 
         """
         degrees = self._angle_to_degrees(angle)
-        self.logger.debug(f'Servo angle: {angle:+.4f} rad  =>  {degrees:.1f}°')
+        #self.logger.debug(f'Servo angle: {angle:+.4f} rad  =>  {degrees:.1f}°')
         self.myKit.servo[self.SERVO_CHANNEL].angle = degrees
 
     def _angle_to_degrees(self, angle: float) -> float:

@@ -36,7 +36,7 @@ controller_server:
 
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.5
+      desired_linear_vel: 0.3
       max_linear_accel: 0.1
       max_linear_decel: 0.2
       # Informazione cinematica vitale aggiunta
@@ -74,11 +74,13 @@ local_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         observation_sources: scan
+        footprint_clearing_enabled: True
         scan:
           topic: /scan
           max_obstacle_height: 2.0
           clearing: True           # Assicura che i punti vuoti "cancellino" gli ostacoli vecchi
           marking: True
+          inf_is_valid: True
           data_type: "LaserScan"
           raytrace_max_range: 4.0  # Leggermente aumentato per far arrivare il raggio di pulizia più lontano
           obstacle_max_range: 3.5
@@ -97,10 +99,10 @@ global_costmap:
       use_sim_time: False
       rolling_window: false
       # LARGHEZZA E ALTEZZA: DEVONO ESSERE INTERI (Senza il .0)
-      width: 20
-      height: 20     # ORIGINE: DEVONO ESSERE DECIMALI (Con il .0)
-      origin_x: -10.0
-      origin_y: -10.0
+      width: 40
+      height: 40     # ORIGINE: DEVONO ESSERE DECIMALI (Con il .0)
+      origin_x: -20.0
+      origin_y: -20.0
       resolution: 0.05
       robot_radius: 0.175         # CORRETTO: 35cm di diametro = 17.5cm di raggio
       plugins: ["obstacle_layer", "inflation_layer"]
@@ -137,13 +139,7 @@ recoveries_server:
     costmap_topic: local_costmap/costmap_raw
     footprint_topic: local_costmap/published_footprint
     cycle_frequency: 10.0
-    recovery_plugins: ["spin", "backup", "wait"]
-    spin:
-      plugin: "nav2_recoveries::Spin"
-    backup:
-      plugin: "nav2_recoveries::BackUp"
-    wait:
-      plugin: "nav2_recoveries::Wait"
+    recovery_plugins: []
     global_frame: odom
     robot_base_frame: base_link
     transform_tolerance: 0.1

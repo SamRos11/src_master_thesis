@@ -28,7 +28,7 @@ ekf_global_node:
 
     # SENSOR 3: STELLA VSLAM (La correzione globale)
     pose0: /run_slam/camera_pose
-    pose0_config: [true,  true,  false,  # Fidati di X, Y dallo SLAM
+    pose0_config: [false,  false,  false,  # Fidati di X, Y dallo SLAM
                    false, false, false,   # Fidati dello Yaw dallo SLAM
                    false, false, false,
                    false, false, false,
