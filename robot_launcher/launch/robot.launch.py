@@ -48,7 +48,7 @@ def generate_launch_description():
             ],
             parameters=[{
                 'output_frame': 'camera_link', 
-                'range_min': 0.2,              # Ignores things within 30cm (noise)
+                'range_min': 0.1,              # Ignores things within 30cm (noise)
                 'range_max': 4.0,              # Ignore things over 5m
                 'scan_height': 300              # How many pixel rows to use (higher = sees obstacles of different heights)
             }]

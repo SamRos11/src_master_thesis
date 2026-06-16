@@ -7,6 +7,7 @@ from ultralytics import YOLO
 from deep_sort_realtime.deepsort_tracker import DeepSort
 import cv2
 import numpy as np
+import torch
 
 class TrackingNode(Node):
     def __init__(self):
@@ -169,6 +170,7 @@ class TrackingNode(Node):
             cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
         self.publisher.publish(array_msg)
+        torch.cuda.empty_cache()
 
 def main(args=None):
     rclpy.init(args=args)

@@ -28,7 +28,7 @@ class RealOdometryNode(Node):
         self.theta = 0.0
         
         # Distance between front and rear axles (Wheelbase)
-        self.wheelbase = 0.34  # Meters (Adjust this to your real car!)
+        self.wheelbase = 0.34  # Meters 
         
         self.last_time = self.get_clock().now()
         

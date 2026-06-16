@@ -28,9 +28,9 @@ class CarControlNode(Node):
     # Servo — controlled via ServoKit (angle in degrees)
     SERVO_CHANNEL = 4
     SERVO_ACTUATION_RANGE = 180  # degrees — full physical sweep of the servo
-    SERVO_MIN_DEG = 0  # degrees — full left
+    SERVO_MIN_DEG = -20  # degrees — full left
     SERVO_CENTER_DEG = 50  # degrees — straight ahead
-    SERVO_MAX_DEG = 100  # degrees — full right
+    SERVO_MAX_DEG = 120  # degrees — full right
     SERVO_MIN_US = 400  # µs — pulse width at 0°
     SERVO_MAX_US = 2000  # µs — pulse width at 180°
 
